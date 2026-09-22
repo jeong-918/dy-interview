@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="ko"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>교과면접 시뮬레이션</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:"Noto Sans KR",sans-serif;background:#0c1016;color:#e8e2d4}
+header{position:sticky;top:0;z-index:20;border-bottom:1px solid #2a3342;background:#0c1016}
+.wrap{max-width:1100px;margin:0 auto;padding:12px 16px}
+.brand p{margin:0;font-size:10px;letter-spacing:.2em;color:#c4a35a}.brand h1{margin:2px 0 0;font-size:18px}
+#progress{display:flex;gap:10px;flex-wrap:wrap}.step{font-size:11px;color:#667085}.step.on{color:#c4a35a}
+.screen{display:none;min-height:calc(100vh - 72px)}.screen.active{display:block}
+.hero{min-height:78vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px}
+.hero h2{margin:8px 0 12px;font-size:36px}
+.menu{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:min(640px,100%)}
+.btn{display:inline-flex;align-items:center;justify-content:center;width:auto;padding:8px 14px;border:1px solid #2a3342;border-radius:8px;background:#151b24;color:#e8e2d4;cursor:pointer;font:inherit;white-space:nowrap}
+.btn.gold{background:#c4a35a;color:#0c1016;border-color:#c4a35a;font-weight:700}.btn.danger{color:#f0b4b4;border-color:#7f3d3d}
+.menu .btn{width:100%;padding:16px 12px;white-space:normal}
+.card{background:#151b24;border:1px solid #2a3342;border-radius:14px;padding:16px}
+.muted,.tiny{color:#9aa6b5;font-size:13px}.tiny{font-size:12px}
+.row{display:flex;gap:8px;align-items:flex-start;padding:10px;border:1px solid #2a3342;border-radius:10px;margin-bottom:8px}.row.sel{border-color:#c4a35a}
+.item{display:flex;justify-content:space-between;gap:12px;align-items:center;background:#151b24;border:1px solid #2a3342;border-radius:12px;padding:12px 14px;margin-bottom:8px}
+.item.wide{width:100%;text-align:left}.btns{display:flex;gap:6px;flex-shrink:0}
+.link{background:none;border:0;color:inherit;text-align:left;cursor:pointer;font:inherit}
+.opt{margin-right:10px}.hide{display:none!important}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;padding:16px}.modal.show{display:flex}
+.field{width:100%;padding:8px;border:1px solid #2a3342;border-radius:8px;background:#0c1016;color:#e8e2d4;font:inherit}
+.room{background:radial-gradient(ellipse at 50% 0%,#243044,#121821 46%,#0c1016)}
+.track{height:8px;background:#2a3342;border-radius:99px}.fill{display:block;height:8px;border-radius:99px;background:linear-gradient(90deg,#b98b38,#e8d7a3)}
+.barlab{display:flex;justify-content:space-between;font-size:14px;margin-bottom:4px}#meter{display:block;height:8px;width:0;background:#7dcea0}
+#inappGate{position:fixed;inset:0;z-index:80;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(12,16,22,.96)}
+#inappGate.show{display:flex}
+@media print{body *{visibility:hidden}#printArea,#printArea *{visibility:visible}#printArea{position:absolute;left:0;top:0;width:100%;color:#111;background:#fff}}
+</style></head><body>
+<div id="inappGate"><div class="card" style="max-width:420px;text-align:center">
+<p class="tiny" style="letter-spacing:.2em;color:#c4a35a">KAKAOTALK</p>
+<h2 style="margin:8px 0 12px">카카오톡 안에서는 마이크가 반복해서 물어봅니다</h2>
+<p class="muted">카톡 내부 브라우저는 카메라·마이크를 유지하지 못합니다. 버튼을 누르면 Safari/Chrome으로 엽니다.</p>
+<p><button type="button" class="btn gold" id="openExternal">외부 브라우저로 면접 시작</button></p>
+<p class="tiny" style="text-align:left">아이폰: 공유 → Safari로 열기<br>갤럭시: ⋮ → 다른 브라우저로 열기</p>
+</div></div>
+<header><div class="wrap" style="display:flex;justify-content:space-between;align-items:center"><div class="brand"><p>UNIVERSITY INTERVIEW</p><h1>교과면접 시뮬레이션</h1></div><button type="button" class="btn" id="homeBtn">홈</button></div><div class="wrap" id="progress"></div></header>
+<section class="screen active" id="home"><div class="hero"><p class="tiny" style="letter-spacing:.25em;color:#c4a35a">SUBJECT INTERVIEW</p><h2>교과면접 시뮬레이션</h2><p class="muted">실전처럼 연습하고, 답변을 분석하세요.</p><div class="menu"><button type="button" class="btn gold" data-go="settings">면접 시작</button><button type="button" class="btn" data-go="guide">예상 질문 만들기</button><button type="button" class="btn" data-go="bank">질문은행 관리</button><button type="button" class="btn" data-go="history">이전 결과 보기</button></div><p class="tiny" id="bankInfo" style="margin-top:20px"></p></div></section>
+<section class="screen" id="guide"><div class="wrap" style="padding-top:24px;padding-bottom:40px"><h2>예상 질문 만들기</h2><p class="muted">아래 양식으로 MD/TXT를 만들면 질문은행에 연결됩니다.</p><div class="card"><h3 style="color:#c4a35a;margin-top:0">MD/TXT 작성 양식</h3><pre style="white-space:pre-wrap;background:#0c1016;padding:12px;border-radius:8px;font-size:12px;line-height:1.6">**1. 질문을 입력하세요.**
+- 모범답안: 결론을 말한 뒤 이유와 자신의 경험 또는 예시를 연결합니다.
+- 키워드: 결론, 근거, 구체적 경험, 전공 연계
+
+**2. 다음 질문을 입력하세요.**
+- 모범답안: ...
+- 키워드: ...</pre><p class="tiny">1~9 인성 및 품행, 10~16 사회성, 17~36 지원학과이해, 37~52 문제해결능력.</p></div><label class="card" style="display:block;text-align:center;margin:16px 0;cursor:pointer">MD / TXT 파일 업로드<input id="fileMd" type="file" accept=".md,.txt,.markdown" hidden></label><textarea id="mdText" class="field" rows="10" placeholder="또는 위 양식을 붙여넣으세요."></textarea><div style="margin-top:12px;text-align:right"><button type="button" class="btn" data-go="home">취소</button> <button type="button" class="btn gold" id="parseBtn">분류·검토</button></div></div></section>
+<section class="screen" id="review"><div class="wrap" style="padding-top:24px"><h2>질문 후보 검토</h2><div style="margin:12px 0"><button type="button" class="btn" id="allCand">전체 선택</button> <button type="button" class="btn" id="noneCand">선택 해제</button> <button type="button" class="btn gold" id="addCand">선택 질문 등록</button></div><div style="display:grid;gap:16px;grid-template-columns:1fr 1fr"><div id="candList"></div><div class="card" id="candDetail"></div></div></div></section>
+<section class="screen" id="bank"><div class="wrap" style="padding-top:24px;padding-bottom:40px"><div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:center"><h2>질문은행 <span class="muted" id="bankCount"></span></h2><div class="btns"><button type="button" class="btn gold" id="addQ">질문 추가</button><button type="button" class="btn" id="importMd">MD 가져오기</button><button type="button" class="btn" id="exportMd">MD 내보내기</button><button type="button" class="btn danger" id="deleteAllBank">모두 삭제</button><button type="button" class="btn" id="restoreBank">기본 52문항 복원</button></div></div><div style="margin:12px 0;display:flex;gap:8px"><input id="bankSearch" class="field" placeholder="질문 검색" style="max-width:240px"><select id="bankCat" class="field" style="max-width:180px"></select></div><div id="bankList"></div></div></section>
+<div class="modal" id="modal"><div class="card" style="width:min(520px,100%)"><label>질문<textarea id="eq" class="field" rows="3"></textarea></label><label>유형<select id="ec" class="field"><option>인성 및 품행</option><option>사회성</option><option>지원학과이해</option><option>문제해결능력</option></select></label><label>모범답안<textarea id="em" class="field" rows="4"></textarea></label><label>키워드<textarea id="ek" class="field" rows="3"></textarea></label><div style="margin-top:12px;text-align:right"><button type="button" class="btn" id="cancelEdit">취소</button> <button type="button" class="btn gold" id="saveEdit">저장</button></div></div></div>
+<section class="screen" id="settings"><div class="wrap" style="padding-top:24px;max-width:760px"><h2>면접 설정</h2><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><label>학생 이름<input id="student" class="field"></label><label>지원 대학<input id="univ" class="field" value="우송대학교"></label><label>지원 학과<input id="dept" class="field" value="작업치료학과"></label><label>면접 유형<select id="itype" class="field"><option>교과면접</option><option>학생부 기반</option><option>혼합형</option></select></label></div><p>질문 수</p><div id="qCounts"></div><p>답변 제한시간</p><div id="qTimes"></div><p>답변 시작</p><label class="opt"><input type="radio" name="startMode" value="button" checked> 버튼으로 시작</label><label class="opt"><input type="radio" name="startMode" value="auto"> 5초 후 자동 시작</label><p><label class="opt"><input id="voiceOn" type="checkbox" checked> 질문 음성</label><label class="opt"><input id="saveOn" type="checkbox" checked> 결과 저장</label></p><div style="text-align:right"><button type="button" class="btn gold" id="toEquip">장비 점검</button></div></div></section>
+<section class="screen" id="equipment"><div class="wrap" style="padding-top:24px"><h2>장비 점검</h2><p class="muted">카메라·마이크는 여기서 한 번만 연결합니다. 아이폰/아이패드는 설정에서 Siri를 켜 두면 음성인식이 됩니다.</p><p id="devNote" class="card" style="display:none;border-color:#c4a35a"></p><div style="display:grid;grid-template-columns:1fr 1fr;gap:16px"><div class="card"><video id="preview" autoplay muted playsinline style="width:100%;aspect-ratio:16/9;background:#000;border-radius:8px"></video><p id="camMsg"></p></div><div class="card"><p>마이크</p><div style="height:8px;background:#2a3342;border-radius:99px;overflow:hidden"><i id="meter"></i></div><p id="micMsg"></p><p id="spkMsg"></p></div></div><div style="text-align:right;margin-top:16px"><button type="button" class="btn gold" id="readyBtn">준비 완료</button></div></div></section>
+<section class="screen room" id="waiting"><div class="hero"><h2>면접 대기실</h2><p id="waitTime" style="font-size:48px;color:#c4a35a">00:05</p></div></section>
+<section class="screen room" id="door"><div class="hero"><div style="width:200px;height:300px;background:#4e3928;border:8px solid #2a1e15;margin-bottom:20px"></div><button type="button" class="btn gold" id="knockBtn">똑똑</button><p id="doorMsg"></p></div></section>
+<section class="screen room" id="room"><div class="wrap" style="padding-top:16px"><div style="display:flex;justify-content:space-between" class="tiny"><span id="qProg">질문 0/0</span><span id="recMark" class="hide" style="color:#f0b4b4">● 녹화중 <span id="recClock">00:00</span></span></div><div class="card" style="min-height:70vh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,.2)"><p class="tiny" id="qCat"></p><p id="qNo" style="letter-spacing:.2em;color:#c4a35a">QUESTION</p><p id="qText" style="font-size:22px;text-align:center;max-width:720px"></p><p class="muted" id="hint"></p><p id="timer" class="hide" style="font-size:24px"></p><p class="tiny" id="caption"></p><div id="sttWrap" class="hide" style="width:min(640px,100%);margin:8px 0 12px"><textarea id="sttBox" class="field" rows="4" placeholder="말하면 글자가 나타납니다. 안 되면 직접 입력하세요."></textarea></div><video id="selfCam" autoplay muted playsinline style="width:240px;height:150px;background:#000;border-radius:8px"></video><div class="btns" style="margin-top:12px"><button type="button" class="btn gold" id="startIv">면접 시작</button><button type="button" class="btn gold hide" id="ansStart">답변 시작</button><button type="button" class="btn danger hide" id="ansEnd">답변 마침</button><button type="button" class="btn gold hide" id="showRes">결과 확인</button></div></div></div></section>
+<section class="screen" id="report"><div class="wrap" id="printArea" style="padding-top:24px"><h2>교과면접 결과</h2><p class="tiny">모범답안 암기가 아니라 질문 맥락에서 의견·근거·사례가 어우러졌는지를 봅니다.</p><p id="note" class="card"></p><p id="meta"></p><div style="display:grid;grid-template-columns:1fr 1fr;gap:24px"><div><p style="font-size:28px">총점 <span id="total">0</span> / 100</p><div id="bars"></div></div><div><h3>잘한 점</h3><ul id="good"></ul><h3>개선할 점</h3><ul id="bad"></ul><p id="goal"></p></div></div><h3>질문별 결과</h3><div id="qres"></div><div class="card hide" id="detail"></div><button type="button" class="btn" id="printBtn">PDF로 저장</button></div></section>
+<section class="screen" id="history"><div class="wrap" style="padding-top:24px"><div style="display:flex;justify-content:space-between;align-items:center"><h2>이전 결과</h2><button type="button" class="btn danger" id="delAllHist">전체 삭제</button></div><p class="muted">각 기록의 삭제로 한 건만 지울 수 있습니다.</p><div id="histList"></div></div></section>
+<input id="importFile" type="file" accept=".md,.txt,.markdown" hidden>
+<script>const DEFAULT_BANK=[{"id": "Q01", "no": 1, "category": "인성 및 품행", "question": "자기소개를 해주세요.", "modelAnswer": "안녕하십니까, 수험번호 ***입니다. 저는 사람의 일상을 회복시키는 일에 관심이 많아 [교과/동아리] 활동을 통해 작업치료라는 분야를 깊이 알게 되었습니다. 특히 [구체적 활동]을 계기로 신체적·심리적 어려움을 겪는 사람들의 일상 복귀를 돕는 작업치료사가 되고자 지원하게 되었습니다. 성실함과 공감 능력을 바탕으로 우송대학교 작업치료학과에서 성장하겠습니다.", "keywords": ["일상 회복", "공감 능력", "성실함", "작업치료사", "지원 계기"]}, {"id": "Q02", "no": 2, "category": "인성 및 품행", "question": "본인에게 가장 감사한 분은 누구이며, 그 이유는 무엇입니까?", "modelAnswer": "저에게 가장 감사한 분은 [부모님/선생님/멘토]입니다. [구체적 일화]를 통해 어려움 속에서도 포기하지 않는 태도를 배웠고, 이는 환자를 대하는 작업치료사에게 필요한 인내심과도 연결된다고 생각합니다. 그 가르침을 마음에 새기며 앞으로도 타인을 배려하는 사람이 되겠습니다.", "keywords": ["감사", "구체적 일화", "인내심", "배려", "작업치료사 자질 연결"]}, {"id": "Q03", "no": 3, "category": "인성 및 품행", "question": "인생의 좌우명 및 가치관은 무엇입니까?", "modelAnswer": "저의 좌우명은 \"[좌우명]\"입니다. [계기가 된 경험]을 겪으며 이 문장을 삶의 기준으로 삼게 되었습니다. 이 가치관은 환자 개개인의 속도에 맞춰 재활을 돕는 작업치료의 철학과도 일치한다고 생각하며, 성급함보다 꾸준함을 우선하는 치료사가 되겠습니다.", "keywords": ["좌우명", "계기", "꾸준함", "작업치료 철학", "개인 맞춤"]}, {"id": "Q04", "no": 4, "category": "인성 및 품행", "question": "진취적인 의욕이 있습니까? 구체적 사례로 설명해보세요.", "modelAnswer": "네, 저는 [동아리/프로젝트]에서 스스로 역할을 제안하고 새로운 활동을 기획한 경험이 있습니다. [구체적 성과]를 이끌어내며 주도적으로 문제를 해결하는 자세를 길렀습니다. 이러한 진취성은 다양한 재활 프로그램을 능동적으로 설계해야 하는 작업치료사에게 꼭 필요한 자질이라고 생각합니다.", "keywords": ["주도성", "기획", "문제 해결", "성과", "재활 프로그램"]}, {"id": "Q05", "no": 5, "category": "인성 및 품행", "question": "자신의 학교생활 중 가장 인상 깊었던 일은 무엇입니까?", "modelAnswer": "가장 인상 깊었던 경험은 [구체적 활동, 예: 장애 이해 캠페인/보건 동아리 활동]입니다. 이 과정에서 [배운 점]을 느꼈고, 사람을 돕는 일의 보람을 처음으로 체감했습니다. 이 경험이 작업치료학과를 지원하게 된 결정적 계기가 되었습니다.", "keywords": ["인상 깊은 경험", "보람", "계기", "구체적 활동", "지원 동기 연결"]}, {"id": "Q06", "no": 6, "category": "인성 및 품행", "question": "학교생활 및 학업에서 근면·성실했던 사례를 말해보세요.", "modelAnswer": "[교과/과제명]을 준비하며 [구체적 노력, 예: 매일 정리노트 작성, 꾸준한 자료조사]를 지속했습니다. 힘든 순간도 있었지만 끝까지 완성해 [결과]를 얻었습니다. 이러한 꾸준함은 장기간의 재활 과정을 함께하는 작업치료사에게 반드시 필요한 태도라고 생각합니다.", "keywords": ["성실성", "꾸준함", "완성도", "장기 재활", "결과"]}, {"id": "Q07", "no": 7, "category": "인성 및 품행", "question": "학업 이외 가족·친구와의 여가시간 활용 방법과 대화 주제는 무엇입니까?", "modelAnswer": "저는 주로 [가족/친구]와 [활동, 예: 산책, 운동, 독서 토론]을 하며 시간을 보냅니다. 대화 주제는 주로 [관심 주제]이며, 이를 통해 다양한 시각을 이해하는 힘을 길렀습니다. 이러한 소통 방식은 환자·보호자와 신뢰를 쌓아야 하는 작업치료 현장에서도 도움이 될 것이라 생각합니다.", "keywords": ["소통", "관계 형성", "다양한 시각", "신뢰", "환자·보호자"]}, {"id": "Q08", "no": 8, "category": "인성 및 품행", "question": "작업치료학과에 적합하다고 생각되는 본인의 기질과 특성은 무엇입니까?", "modelAnswer": "저는 [기질, 예: 침착함/공감력/관찰력]이 강점이라고 생각합니다. [구체적 사례]에서 이러한 성향이 드러났으며, 이는 환자의 미세한 변화를 살피고 안정적으로 재활을 이끄는 작업치료사의 자질과 부합한다고 생각합니다.", "keywords": ["기질", "공감력", "관찰력", "안정감", "환자 중심"]}, {"id": "Q09", "no": 9, "category": "인성 및 품행", "question": "사람을 존중하고 배려할 수 있습니까? 구체적 경험이 있습니까?", "modelAnswer": "네, [구체적 경험, 예: 봉사활동/조별과제]에서 상대방의 입장을 먼저 고려해 [행동]을 한 경험이 있습니다. 이를 통해 존중과 배려는 결국 상대의 필요를 먼저 파악하는 것에서 시작된다는 것을 배웠고, 이는 대상자 중심의 작업치료 원칙과도 일치합니다.", "keywords": ["존중", "배려", "상대방 입장", "대상자 중심", "구체적 경험"]}, {"id": "Q10", "no": 10, "category": "사회성", "question": "현재 이슈화되고 있는 화제를 요약하고 자신의 의견을 말해보세요.", "modelAnswer": "최근 [이슈, 예: 고령화 사회 문제/장애인 이동권 논의]가 주목받고 있습니다. 저는 이 문제가 [본인 의견]이라고 생각하며, 특히 [작업치료 연계 관점]에서 접근할 필요가 있다고 봅니다. 앞으로 이 분야의 전문가로서 사회적 문제 해결에도 기여하고 싶습니다.", "keywords": ["사회 이슈", "본인 의견", "작업치료 연계", "고령화·장애", "기여 의지"]}, {"id": "Q11", "no": 11, "category": "사회성", "question": "앞으로 우리나라 작업치료(직업)의 전망에 대해 어떻게 생각합니까?", "modelAnswer": "고령화와 만성질환 증가로 재활 수요가 커지면서 작업치료의 역할은 더욱 확대될 것이라 생각합니다. 특히 아동 발달재활, 정신건강, 지역사회 재활 등 영역이 넓어지고 있어 전문성을 갖춘 인력의 필요성이 커질 것입니다. 저 역시 이러한 흐름에 발맞춰 전문성을 키우고자 합니다.", "keywords": ["고령화", "재활 수요 확대", "지역사회 재활", "전문성", "발전 가능성"]}, {"id": "Q12", "no": 12, "category": "사회성", "question": "자신의 삶에서 가장 어려웠던 경험과 그 대처방법을 말해보세요.", "modelAnswer": "가장 어려웠던 시기는 [구체적 상황, 예: 성적 하락/건강 문제/갈등 상황]이었습니다. 당시 [대처 방법, 예: 계획을 세워 하나씩 해결/주변에 도움 요청]을 통해 극복했고, 이 과정에서 문제를 회피하지 않는 태도를 배웠습니다. 이 경험은 환자의 어려움에 함께 대처하는 작업치료사의 자세로 이어질 것입니다.", "keywords": ["어려움", "대처 방법", "극복 과정", "회피하지 않는 태도", "환자 공감"]}, {"id": "Q13", "no": 13, "category": "사회성", "question": "다른 사람과의 협동심을 증진시키기 위해 어떻게 하고 있습니까?", "modelAnswer": "저는 [활동, 예: 조별 프로젝트/동아리]에서 서로의 역할을 명확히 나누고 정기적으로 의견을 공유하는 방식을 활용했습니다. 이를 통해 갈등을 줄이고 목표를 함께 달성할 수 있었으며, 이는 다학제 협업이 필수인 작업치료 현장에서도 중요한 역량이라고 생각합니다.", "keywords": ["협동심", "역할 분담", "의견 공유", "다학제 협업", "갈등 관리"]}, {"id": "Q14", "no": 14, "category": "사회성", "question": "취미와 특기는 무엇입니까?", "modelAnswer": "제 취미는 [취미]이며, 특기는 [특기]입니다. 이를 통해 [얻은 역량, 예: 꾸준함/집중력/손기술]을 기를 수 있었고, 이는 작업치료에서 활용되는 다양한 활동 치료 기법을 익히는 데에도 도움이 될 것이라 생각합니다.", "keywords": ["취미", "특기", "역량 연결", "활동 치료", "꾸준함"]}, {"id": "Q15", "no": 15, "category": "사회성", "question": "코로나(비대면) 시대의 학업수행 경험을 말해보세요.", "modelAnswer": "비대면 수업 환경에서 [구체적 어려움]을 겪었지만, [해결 방법, 예: 스스로 학습 계획 수립, 온라인 자료 활용]을 통해 학업 공백을 최소화했습니다. 이 경험으로 자기주도적 학습 능력을 키웠고, 변화하는 환경에도 유연하게 적응하는 힘을 길렀습니다.", "keywords": ["비대면 학습", "자기주도성", "적응력", "학습 계획", "유연성"]}, {"id": "Q16", "no": 16, "category": "사회성", "question": "자신이 생각하는 MZ세대의 특성과 차별성은 무엇입니까?", "modelAnswer": "MZ세대는 [특성, 예: 개인의 가치와 다양성을 중시하는 경향]이 강하다고 생각합니다. 이전 세대와 달리 [차별성]이 두드러지지만, 동시에 협업과 공동체 의식도 중요하게 여긴다고 생각합니다. 이러한 세대적 특성을 이해하는 것은 다양한 연령대의 환자를 대하는 작업치료사에게도 필요한 역량입니다.", "keywords": ["MZ세대", "다양성", "개인 가치", "공동체 의식", "세대 이해\n\n---"]}, {"id": "Q17", "no": 17, "category": "지원학과이해", "question": "우송대학교 작업치료학과에 지원한 이유(동기)는 무엇입니까?", "modelAnswer": "저는 [계기]를 통해 작업치료에 관심을 갖게 되었고, 우송대학교 작업치료학과가 [강점, 예: 실습 인프라/교육과정/취업 연계]가 뛰어나다는 점에서 지원했습니다. 이곳에서 전문 지식을 쌓아 대상자의 일상 회복을 돕는 작업치료사로 성장하고자 합니다.", "keywords": ["지원 계기", "학과 강점", "실습 인프라", "성장 목표", "일상 회복"]}, {"id": "Q18", "no": 18, "category": "지원학과이해", "question": "작업치료학과(사)를 알게 된 경로·계기는 무엇입니까?", "modelAnswer": "[교과 수업/봉사활동/도서·영화]를 통해 작업치료라는 직업을 처음 접하게 되었습니다. 이후 관련 자료를 찾아보며 신체·정신적 어려움을 겪는 사람들의 독립적 일상 수행을 돕는 전문 직업임을 알게 되었고, 이 분야에 진지하게 관심을 갖게 되었습니다.", "keywords": ["인지 계기", "자료 탐색", "독립적 일상 수행", "전문 직업", "관심 심화"]}, {"id": "Q19", "no": 19, "category": "지원학과이해", "question": "학과 진학 후 학업계획은 무엇입니까?", "modelAnswer": "1학년에는 해부학, 생리학 등 기초 의학 지식을 탄탄히 쌓고, 2~3학년에는 [관심 전공 영역]을 중심으로 실습 경험을 쌓겠습니다. 이후에는 임상실습을 통해 실제 대상자를 만나며 전문성을 완성해 나가겠습니다.", "keywords": ["기초 의학", "전공 심화", "임상실습", "단계별 계획", "전문성"]}, {"id": "Q20", "no": 20, "category": "지원학과이해", "question": "작업치료 관련 서적이나 영화를 접한 경험이 있습니까?", "modelAnswer": "[작품명]을 통해 재활 과정에서 대상자와 치료사가 함께 성장하는 모습을 인상 깊게 보았습니다. 특히 [구체적 장면·내용]에서 작업치료가 단순한 신체 치료가 아니라 삶의 의미를 되찾아주는 과정임을 느꼈습니다.", "keywords": ["작품 경험", "삶의 의미", "재활 과정", "치료사-대상자 관계", "감동 포인트"]}, {"id": "Q21", "no": 21, "category": "지원학과이해", "question": "작업치료사에게 가장 중요한 자질은 무엇이라고 생각합니까?", "modelAnswer": "저는 공감 능력과 관찰력이 가장 중요하다고 생각합니다. 대상자마다 필요한 재활 목표가 다르기 때문에 세심하게 관찰하고 소통하는 능력이 필요합니다. 여기에 꾸준한 인내심이 더해질 때 진정한 회복을 이끌 수 있다고 생각합니다.", "keywords": ["공감 능력", "관찰력", "인내심", "대상자 맞춤", "소통 능력"]}, {"id": "Q22", "no": 22, "category": "지원학과이해", "question": "작업치료란 무엇입니까? 본인의 언어로 설명해보세요.", "modelAnswer": "작업치료는 신체적·정신적 어려움을 겪는 사람이 일상생활, 즉 식사, 이동, 놀이, 일 등의 '작업'을 다시 수행할 수 있도록 돕는 재활 치료라고 이해하고 있습니다. 단순히 기능을 회복시키는 것을 넘어 삶의 질을 회복시키는 것이 핵심이라고 생각합니다.", "keywords": ["일상생활 작업", "재활 치료", "삶의 질", "기능 회복", "대상자 중심"]}, {"id": "Q23", "no": 23, "category": "지원학과이해", "question": "작업치료학과 졸업 후 계획은 무엇입니까?", "modelAnswer": "졸업 후에는 [희망 분야, 예: 병원/재활센터/발달재활 기관]에서 임상 경험을 쌓고, 이후 [장기 목표, 예: 특정 분야 전문 치료사/연구]로 성장해 나가고자 합니다. 지속적인 학습을 통해 전문성을 넓히는 작업치료사가 되겠습니다.", "keywords": ["희망 분야", "임상 경험", "장기 목표", "지속 학습", "전문성 확장"]}, {"id": "Q24", "no": 24, "category": "지원학과이해", "question": "작업치료학과에서 관심 있는 전공교과목과 그 이유는 무엇입니까?", "modelAnswer": "저는 [교과목명, 예: 소아작업치료학/정신사회작업치료학]에 관심이 있습니다. [관심 이유, 예: 발달 지연 아동을 돕고 싶다는 계기]가 있어 해당 분야를 깊이 배우고 싶습니다.", "keywords": ["관심 교과목", "관심 이유", "세부 전공 영역", "학습 목표", "대상자 유형"]}, {"id": "Q25", "no": 25, "category": "지원학과이해", "question": "전공 관련하여 하고 싶은(또는 인상 깊었던) 동아리 활동이 있습니까?", "modelAnswer": "저는 [보건의료 동아리/장애인 봉사 동아리]에 가입해 [구체적 활동]을 하고자 합니다. 이를 통해 이론으로 배운 내용을 직접 적용해보며 현장 감각을 키우고 싶습니다.", "keywords": ["동아리 활동", "현장 감각", "이론 적용", "실천 경험", "전공 연계"]}, {"id": "Q26", "no": 26, "category": "지원학과이해", "question": "작업치료학과에서 이루고 싶은 꿈 및 계획은 무엇입니까?", "modelAnswer": "저는 [구체적 목표, 예: 소아 발달재활 전문 치료사]가 되고 싶습니다. 이를 위해 관련 교과목을 우선적으로 수강하고, 봉사·실습 기회를 적극적으로 찾아 실무 역량을 쌓아 나가겠습니다.", "keywords": ["구체적 목표", "실무 역량", "봉사·실습", "전공 로드맵", "성장 계획"]}, {"id": "Q27", "no": 27, "category": "지원학과이해", "question": "작업치료(사)에 대한 본인의 생각은 무엇입니까?", "modelAnswer": "작업치료사는 단순히 신체 기능을 회복시키는 사람이 아니라, 대상자가 다시 사회 구성원으로 살아갈 수 있도록 돕는 전문가라고 생각합니다. 그만큼 사회적 책임이 크고 보람 있는 직업이라고 생각합니다.", "keywords": ["사회 복귀", "전문가", "사회적 책임", "보람", "대상자 중심"]}, {"id": "Q28", "no": 28, "category": "지원학과이해", "question": "다른 대학과 달리 우송대학교 작업치료학과를 지원한 이유는 무엇입니까?", "modelAnswer": "우송대학교 작업치료학과는 [차별점, 예: 실습 병원 연계/커리큘럼/취업률]이 뛰어나다고 알고 있습니다. 특히 [구체적 강점]이 제가 이루고자 하는 목표와 잘 맞아 지원하게 되었습니다.", "keywords": ["대학 차별점", "실습 연계", "커리큘럼", "목표 부합", "취업 지원"]}, {"id": "Q29", "no": 29, "category": "지원학과이해", "question": "작업치료 분야의 진로에 대해 아는 것을 모두 말해보세요.", "modelAnswer": "작업치료사는 병원, 재활센터, 복지관, 학교, 산업재활 분야 등 다양한 곳에서 근무할 수 있습니다. 대상자에 따라 소아, 신경계, 정신사회, 노인 작업치료 등으로 세부 분야가 나뉘며, 최근에는 지역사회 재활과 방문 치료 영역도 확대되고 있습니다.", "keywords": ["근무 분야", "세부 전공", "소아·노인·정신사회", "지역사회 재활", "진로 다양성"]}, {"id": "Q30", "no": 30, "category": "지원학과이해", "question": "작업치료사와 물리치료사의 차이점을 예를 들어 설명해보세요.", "modelAnswer": "물리치료사는 통증 완화와 신체 기능 회복 자체에 집중하는 반면, 작업치료사는 회복된 기능을 실제 일상생활, 예를 들어 식사나 옷 입기 같은 '작업'에 적용할 수 있도록 돕는 데 중점을 둡니다. 즉 물리치료가 기능 회복이라면 작업치료는 삶으로의 통합 과정이라고 이해하고 있습니다.", "keywords": ["물리치료 비교", "일상생활 적용", "기능 회복", "삶으로의 통합", "역할 차이"]}, {"id": "Q31", "no": 31, "category": "지원학과이해", "question": "작업치료사로서 미래 자신의 모습을 그려보세요.", "modelAnswer": "저는 10년 후 [희망 분야]에서 대상자 중심의 맞춤형 재활 프로그램을 설계하는 신뢰받는 작업치료사가 되어 있을 것이라 그려봅니다. 지속적인 연구와 학습을 통해 후배들에게도 좋은 본보기가 되고 싶습니다.", "keywords": ["미래 비전", "대상자 중심", "맞춤형 프로그램", "신뢰", "지속 성장"]}, {"id": "Q32", "no": 32, "category": "지원학과이해", "question": "장애인을 접해본 경험을 구체적으로 말해보세요.", "modelAnswer": "[시기]에 [장소/관계, 예: 지역아동센터/봉사활동]에서 [구체적 장애 유형]을 가진 분을 만난 경험이 있습니다. [있었던 일]을 통해 작은 배려가 큰 변화를 만들 수 있다는 것을 느꼈고, 이 경험이 작업치료를 진지하게 고민하게 된 계기가 되었습니다.", "keywords": ["구체적 경험", "시기·장소", "배려", "변화 목격", "지원 계기"]}, {"id": "Q33", "no": 33, "category": "지원학과이해", "question": "작업치료 관련 봉사활동 경험이 있습니까?", "modelAnswer": "[활동명, 예: 요양원/장애인 복지관 봉사]에 참여하여 [구체적 역할]을 수행했습니다. 이 과정에서 대상자와의 신뢰 형성이 재활의 시작이라는 것을 깨달았습니다.", "keywords": ["봉사활동", "구체적 역할", "신뢰 형성", "재활의 시작", "실천 경험"]}, {"id": "Q34", "no": 34, "category": "지원학과이해", "question": "작업치료사가 일하는 모습을 본 적이 있습니까? 어떤 생각이 들었습니까?", "modelAnswer": "[경로, 예: 병원 견학/뉴스/가족의 재활 과정]을 통해 작업치료사가 대상자의 작은 변화에도 세심하게 반응하며 격려하는 모습을 보았습니다. 그 진심 어린 태도에서 이 직업의 진정한 가치를 느꼈습니다.", "keywords": ["관찰 경험", "세심함", "격려", "진심", "직업 가치"]}, {"id": "Q35", "no": 35, "category": "지원학과이해", "question": "졸업 후 선호하는 취업기관 및 분야는 무엇입니까?", "modelAnswer": "저는 [분야, 예: 소아 발달재활 센터]에서 근무하고 싶습니다. 이는 [이유]로, 해당 대상자에게 가장 필요한 도움을 줄 수 있는 분야라고 생각하기 때문입니다.", "keywords": ["선호 분야", "취업 기관", "지원 이유", "대상자 특성", "진로 구체성"]}, {"id": "Q36", "no": 36, "category": "지원학과이해", "question": "우송대학교 작업치료학과만의 특장점 3가지를 제시해보세요.", "modelAnswer": "첫째, [특장점1, 예: 다양한 실습기관과의 협력체계], 둘째, [특장점2, 예: 국가고시 대비 교육과정], 셋째, [특장점3, 예: 활발한 취업 지원]이 있다고 알고 있습니다. 이러한 강점들이 저의 성장에 실질적인 도움이 될 것이라 생각합니다.", "keywords": ["실습 협력", "국가고시", "취업 지원", "학과 강점", "성장 도움"]}, {"id": "Q37", "no": 37, "category": "문제해결능력", "question": "전공교재가 대부분 영어원서인데, 영어 실력은 어느 정도이며 부족하다면 어떻게 보충할 계획입니까?", "modelAnswer": "현재 저의 영어 실력은 [수준]이며, 전공 원서를 완벽히 이해하기 위해서는 보완이 필요하다고 생각합니다. 이를 위해 매일 전공 관련 영어 용어를 정리하고, [학습 방법, 예: 원서 스터디/온라인 강의]를 병행해 실력을 꾸준히 키워 나가겠습니다.", "keywords": ["영어 실력", "전공 용어", "보완 계획", "꾸준한 학습", "원서 이해"]}, {"id": "Q38", "no": 38, "category": "문제해결능력", "question": "코로나 및 포스트코로나 시대 학업 영향에 대한 경험과 대처방법은 무엇입니까?", "modelAnswer": "비대면 수업으로 [구체적 어려움]을 겪었지만, [대처 방법]을 통해 학업 결손을 최소화했습니다. 이 경험을 통해 예상치 못한 변화에도 스스로 대안을 마련하는 문제 해결력을 길렀습니다.", "keywords": ["학업 영향", "대처 방법", "학업 결손 최소화", "문제 해결력", "변화 대응"]}, {"id": "Q39", "no": 39, "category": "문제해결능력", "question": "본인의 장점과 단점은 무엇이며, 단점을 어떻게 극복하고 있습니까?", "modelAnswer": "저의 장점은 [장점, 예: 꾸준함]이고, 단점은 [단점, 예: 완벽주의로 인한 시간 소요]입니다. 이를 극복하기 위해 [구체적 노력, 예: 우선순위를 정해 계획적으로 처리]하고 있으며, 이 과정을 통해 균형 잡힌 태도를 배우고 있습니다.", "keywords": ["장점", "단점", "극복 노력", "균형", "자기 성찰"]}, {"id": "Q40", "no": 40, "category": "문제해결능력", "question": "스트레스를 해소하는 방법과 본인을 가장 힘들게 하는 것은 무엇입니까?", "modelAnswer": "저를 가장 힘들게 하는 것은 [스트레스 요인]입니다. 이럴 때는 [해소 방법, 예: 운동, 산책, 대화]을 통해 감정을 정리하고 다시 침착하게 문제를 바라봅니다. 이러한 자기관리 능력은 감정노동이 동반되는 작업치료 현장에서도 중요하다고 생각합니다.", "keywords": ["스트레스 요인", "해소 방법", "자기관리", "감정노동", "침착함"]}, {"id": "Q41", "no": 41, "category": "문제해결능력", "question": "힘들거나 슬플 때 어떻게 극복합니까? 가장 힘들었던 경험은 무엇입니까?", "modelAnswer": "가장 힘들었던 경험은 [구체적 상황]이었습니다. 당시 [극복 방법, 예: 목표를 작게 나누어 하나씩 해결]을 통해 이겨냈고, 이 경험으로 어려움 앞에서도 침착하게 대응하는 힘을 길렀습니다.", "keywords": ["힘든 경험", "극복 방법", "침착한 대응", "목표 분할", "성장"]}, {"id": "Q42", "no": 42, "category": "문제해결능력", "question": "조별과제(그룹과제)에서 조원과 문제가 발생했을 때 어떻게 대처합니까?", "modelAnswer": "[구체적 상황]에서 의견 차이가 있었지만, 서로의 입장을 먼저 듣고 공통의 목표를 다시 확인하며 역할을 재조정했습니다. 그 결과 [결과]를 이끌어냈고, 갈등을 대화로 풀어가는 방법을 배웠습니다.", "keywords": ["갈등 상황", "경청", "공통 목표", "역할 재조정", "대화를 통한 해결"]}, {"id": "Q43", "no": 43, "category": "문제해결능력", "question": "병원 실습 중 문제가 발생한다면 어떻게 대처하겠습니까?", "modelAnswer": "실습 중 예상치 못한 상황이 생긴다면, 먼저 침착하게 상황을 파악한 뒤 지도 선생님께 신속히 보고하고 지시에 따라 행동하겠습니다. 이후에는 해당 상황을 기록하고 스스로 원인을 분석해 재발을 방지하겠습니다.", "keywords": ["침착한 대응", "신속 보고", "지도 지시 준수", "기록·분석", "재발 방지"]}, {"id": "Q44", "no": 44, "category": "문제해결능력", "question": "좋아하는 과목과 싫어하는 과목은 무엇이며, 싫어하는 과목을 어떻게 극복했습니까?", "modelAnswer": "제가 좋아하는 과목은 [교과명]이고, 어려움을 느낀 과목은 [교과명]이었습니다. [극복 방법, 예: 기초부터 다시 정리, 오답노트 작성]을 통해 점차 자신감을 얻었으며, 이 경험으로 약점도 노력으로 보완할 수 있다는 것을 배웠습니다.", "keywords": ["선호 과목", "어려운 과목", "극복 방법", "자신감", "노력의 가치"]}, {"id": "Q45", "no": 45, "category": "문제해결능력", "question": "인생에서 가장 중요하게 생각하는 것과 인생의 목표·철학은 무엇입니까?", "modelAnswer": "저는 [핵심 가치, 예: 꾸준한 성장]을 가장 중요하게 생각합니다. 저의 목표는 [구체적 목표]이며, 이를 이루기 위해 매일 조금씩 나아가는 것을 삶의 철학으로 삼고 있습니다.", "keywords": ["핵심 가치", "인생 목표", "삶의 철학", "꾸준한 성장", "실천"]}, {"id": "Q46", "no": 46, "category": "문제해결능력", "question": "가장 보람 있었던 일과 가장 행복했던 순간은 무엇입니까?", "modelAnswer": "가장 보람 있었던 일은 [구체적 경험, 예: 봉사활동에서 대상자의 변화를 지켜본 순간]입니다. 그 순간 제가 누군가에게 긍정적인 영향을 줄 수 있다는 것을 깨달았고, 이는 지금까지도 저에게 큰 행복으로 남아 있습니다.", "keywords": ["보람", "행복", "긍정적 영향", "구체적 경험", "성장의 확인"]}, {"id": "Q47", "no": 47, "category": "문제해결능력", "question": "자신이 생각하는 행복은 무엇이며, 이를 위해 현재 노력하고 있는 일은 무엇입니까?", "modelAnswer": "저에게 행복은 [정의, 예: 작은 목표를 이루어가는 과정]입니다. 이를 위해 매일 [구체적 노력]을 실천하고 있으며, 작은 성취가 쌓여 더 큰 목표로 이어진다고 믿습니다.", "keywords": ["행복의 정의", "현재 노력", "작은 성취", "목표 지향", "실천"]}, {"id": "Q48", "no": 48, "category": "문제해결능력", "question": "자신만의 주도적 학습방법은 무엇입니까?", "modelAnswer": "저는 [방법, 예: 스스로 학습 계획을 세우고 매주 점검하는 방식]을 활용합니다. 이를 통해 부족한 부분을 스스로 파악하고 보완할 수 있었으며, 이러한 자기주도 학습 습관은 대학 전공 심화 학습에도 도움이 될 것이라 생각합니다.", "keywords": ["자기주도 학습", "계획·점검", "부족한 부분 보완", "학습 습관", "전공 적용"]}, {"id": "Q49", "no": 49, "category": "문제해결능력", "question": "대학 입학 후 이루고 싶은 일(꿈)은 무엇입니까?", "modelAnswer": "대학 입학 후에는 [구체적 목표, 예: 전공 심화 학습과 실습 경험]을 통해 실무 역량을 갖춘 예비 작업치료사로 성장하고 싶습니다. 나아가 [장기 목표]를 이루기 위한 기반을 다지겠습니다.", "keywords": ["대학 목표", "실무 역량", "전공 심화", "실습 경험", "장기 목표"]}, {"id": "Q50", "no": 50, "category": "문제해결능력", "question": "부모님이 자신의 진로와 미래에 반대한다면 어떻게 하겠습니까?", "modelAnswer": "먼저 부모님께서 걱정하시는 이유를 충분히 듣고, 제가 작업치료를 선택한 구체적인 이유와 준비 과정을 성실하게 설명드리겠습니다. 대화를 통해 신뢰를 쌓아가면서도, 제 진로에 대한 확신을 행동으로 보여드리겠습니다.", "keywords": ["소통", "신뢰", "진로 확신", "성실한 설명", "행동으로 증명"]}, {"id": "Q51", "no": 51, "category": "문제해결능력", "question": "수업이나 시험시간에 지각하게 되었을 때 어떻게 대처하겠습니까?", "modelAnswer": "지각이 발생하지 않도록 미리 대비하는 것이 우선이지만, 불가피하게 지각한다면 즉시 담당 교수님께 상황을 알리고 정중히 사과한 뒤, 이후 부족한 부분을 스스로 보충하겠습니다.", "keywords": ["사전 대비", "신속 알림", "정중한 태도", "책임감", "보완 노력"]}, {"id": "Q52", "no": 52, "category": "문제해결능력", "question": "장애인 친구가 있다면(있었다면) 어떻게 하겠습니까?", "modelAnswer": "[경험이 있다면 구체적 사례, 없다면 가정형으로] 장애인 친구가 있다면 먼저 그 친구가 필요로 하는 도움이 무엇인지 직접 묻고, 과도한 배려보다는 자연스럽게 함께할 수 있는 방법을 찾겠습니다. 이는 작업치료의 핵심인 대상자의 자립성 존중과도 통한다고 생각합니다.", "keywords": ["자연스러운 배려", "필요 확인", "자립성 존중", "상호작용", "작업치료 연계"]}];</script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  "use strict";
+  var CATS = ["인성 및 품행", "사회성", "지원학과이해", "문제해결능력"];
+  var STOP = "그리고 그러나 하지만 또는 및 등 것 수 때 이 그 저 있다 하다 되다 대한 관련 통해 위해 있는 하는 위한 가장 매우 또한 따라서 학생 대학 면접 생각 합니다 입니다 있습니다 했습니다 것입니다 저는 특히 이후".split(" ");
+  var UA = navigator.userAgent || "";
+  var IS_IOS = /iPad|iPhone|iPod/.test(UA) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  var IS_ANDROID = /Android/i.test(UA);
+  var IS_KAKAO = /KAKAOTALK/i.test(UA);
+  var IN_APP = /KAKAOTALK|Instagram|FBAN|FBAV|NAVER|Line\//i.test(UA);
+  function $(id) { return document.getElementById(id); }
+  function pageUrl() { return location.href.split("#")[0]; }
+  function openExternalBrowser() {
+    var url = pageUrl();
+    if (IS_KAKAO) {
+      location.href = "kakaotalk://web/openExternal?url=" + encodeURIComponent(url);
+      setTimeout(function () { location.href = "kakaotalk://inappbrowser/close"; }, 80);
+      return;
+    }
+    if (IS_ANDROID) {
+      var rest = url.replace(/^https?:\/\//i, "");
+      location.href = "intent://" + rest + "#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=" + encodeURIComponent(url) + ";end";
+    }
+  }
+  if (IN_APP) {
+    $("inappGate").classList.add("show");
+    $("openExternal").addEventListener("click", openExternalBrowser);
+    if (IS_KAKAO) setTimeout(openExternalBrowser, 250);
+  }
+  var screens = {};
+  ["home","guide","review","bank","settings","equipment","waiting","door","room","report","history"].forEach(function (k) { screens[k] = $(k); });
+  var S = {bank:[], cand:[], sel:0, edit:null, stream:null, audio:null, analyser:null, raf:0, rec:null, chunks:[], session:null, index:0, speaking:false, timer:0, wait:0, auto:0, started:0, frames:0, hasMic:false, hasCam:false, settings:null, stt:null, wantStt:false, sttLive:""};
+  function copy(x) { return JSON.parse(JSON.stringify(x)); }
+  function uid() { return "id" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+  function loadBank() {
+    try { var x = JSON.parse(localStorage.getItem("cis-bank-v10") || "null"); if (Array.isArray(x) && x.length) return x; } catch (e) {}
+    return copy(DEFAULT_BANK);
+  }
+  function saveBank() { localStorage.setItem("cis-bank-v10", JSON.stringify(S.bank)); }
+  function loadHist() { try { return JSON.parse(localStorage.getItem("cis-hist-v10") || "[]"); } catch (e) { return []; } }
+  function saveHist(x) { localStorage.setItem("cis-hist-v10", JSON.stringify(x)); }
+  function go(name) {
+    if (IN_APP) return;
+    Object.keys(screens).forEach(function (k) { screens[k].classList.remove("active"); });
+    screens[name].classList.add("active");
+    var order = {home:0, guide:1, review:1, bank:1, settings:1, equipment:2, waiting:3, door:4, room:5, report:6, history:6};
+    var n = order[name] || 0;
+    var labels = ["홈","설정","장비","대기","입장","면접","결과"];
+    $("progress").innerHTML = labels.map(function (t, i) { return "<span class='step" + (i <= n ? " on" : "") + "'>" + t + "</span>"; }).join("");
+    if (name === "bank") renderBank();
+    if (name === "history") renderHistory();
+    if (name === "equipment") startMedia();
+  }
+  document.querySelectorAll("[data-go]").forEach(function (b) { b.addEventListener("click", function () { go(b.getAttribute("data-go")); }); });
+  $("homeBtn").addEventListener("click", function () { cleanup(); go("home"); });
+  $("qCounts").innerHTML = [1,2,3,5,6,7,8,9,10].map(function (n) {
+    return "<label class='opt'><input type='radio' name='qcount' value='" + n + "'" + (n === 8 ? " checked" : "") + "> " + n + "</label>";
+  }).join("");
+  $("qTimes").innerHTML = [[0,"제한 없음"],[60,"60초"],[90,"90초"],[120,"120초"],[180,"180초"]].map(function (x) {
+    return "<label class='opt'><input type='radio' name='qtime' value='" + x[0] + "'" + (x[0] === 120 ? " checked" : "") + "> " + x[1] + "</label>";
+  }).join("");
+  function catByNo(n) { if (n <= 9) return CATS[0]; if (n <= 16) return CATS[1]; if (n <= 36) return CATS[2]; return CATS[3]; }
+  function parseMd(text) {
+    var out = [], m, re = /\*\*\s*(\d+)\.\s*([\s\S]*?)\*\*\s*(?:\r?\n)+\s*[-*]?\s*모범답안\s*[:：]\s*([\s\S]*?)\s*(?:\r?\n)+\s*[-*]?\s*(?:필수\s*)?키워드\s*[:：]\s*([^\n]+)/g;
+    while ((m = re.exec(text || ""))) {
+      var no = Number(m[1]);
+      out.push({ id: "Q" + String(no).padStart(2, "0"), no: no, category: catByNo(no), question: m[2].replace(/\s+/g, " ").trim(), modelAnswer: m[3].replace(/\s+/g, " ").trim(), keywords: m[4].split(/,|·/).map(function (s) { return s.trim(); }).filter(Boolean), approved: true });
+    }
+    return out;
+  }
+  $("fileMd").addEventListener("change", function (e) {
+    var f = e.target.files[0]; if (!f) return;
+    var r = new FileReader(); r.onload = function () { $("mdText").value = r.result; }; r.readAsText(f);
+  });
+  $("parseBtn").addEventListener("click", function () {
+    S.cand = parseMd($("mdText").value);
+    if (!S.cand.length) { alert("문항을 찾지 못했습니다. 작성 양식을 확인해 주세요."); return; }
+    S.sel = 0; go("review"); renderCand();
+  });
+  function renderCand() {
+    $("candList").innerHTML = S.cand.map(function (q, i) {
+      return "<label class='row" + (i === S.sel ? " sel" : "") + "'><input type='checkbox' data-c='" + i + "'" + (q.approved ? " checked" : "") + "><span data-s='" + i + "'>" + q.id + " · [" + q.category + "] " + q.question + "</span></label>";
+    }).join("");
+    $("candList").querySelectorAll("[data-c]").forEach(function (el) { el.addEventListener("change", function () { S.cand[Number(el.getAttribute("data-c"))].approved = el.checked; }); });
+    $("candList").querySelectorAll("[data-s]").forEach(function (el) { el.addEventListener("click", function () { S.sel = Number(el.getAttribute("data-s")); renderCand(); }); });
+    var q = S.cand[S.sel];
+    $("candDetail").innerHTML = q ? "<p class='tiny'>" + q.category + "</p><h3>" + q.question + "</h3><p>" + q.modelAnswer + "</p><p class='tiny'>키워드: " + q.keywords.join(" · ") + "</p>" : "";
+  }
+  $("allCand").addEventListener("click", function () { S.cand.forEach(function (q) { q.approved = true; }); renderCand(); });
+  $("noneCand").addEventListener("click", function () { S.cand.forEach(function (q) { q.approved = false; }); renderCand(); });
+  $("addCand").addEventListener("click", function () {
+    var a = S.cand.filter(function (q) { return q.approved; });
+    if (!a.length) { alert("선택된 질문이 없습니다."); return; }
+    a.forEach(function (q) { var n = copy(q); n.id = uid(); S.bank.push(n); });
+    saveBank(); go("bank");
+  });
+  function renderBank() {
+    $("bankCat").innerHTML = "<option value=''>전체 유형</option>" + CATS.map(function (c) { return "<option>" + c + "</option>"; }).join("");
+    $("bankCount").textContent = "(" + S.bank.length + "문항)";
+    var term = $("bankSearch").value.trim();
+    var cat = $("bankCat").value;
+    var rows = S.bank.filter(function (q) { return (!cat || q.category === cat) && (!term || (q.question + q.keywords.join(" ")).indexOf(term) >= 0); }).sort(function (a, b) { return (a.no || 999) - (b.no || 999); });
+    $("bankList").innerHTML = rows.map(function (q) {
+      return "<div class='item'><div><p class='tiny'>" + q.category + " · 키워드 " + q.keywords.length + "개</p><p>" + q.question + "</p></div><div class='btns'><button type='button' class='btn' data-e='" + q.id + "'>수정</button><button type='button' class='btn' data-d='" + q.id + "'>삭제</button></div></div>";
+    }).join("") || "<p class='muted'>질문이 없습니다.</p>";
+    $("bankList").querySelectorAll("[data-e]").forEach(function (b) { b.addEventListener("click", function () { openEdit(b.getAttribute("data-e")); }); });
+    $("bankList").querySelectorAll("[data-d]").forEach(function (b) { b.addEventListener("click", function () { S.bank = S.bank.filter(function (q) { return q.id !== b.getAttribute("data-d"); }); saveBank(); renderBank(); }); });
+  }
+  $("bankSearch").addEventListener("input", renderBank);
+  $("bankCat").addEventListener("change", renderBank);
+  function openEdit(id) {
+    S.edit = id;
+    var q = S.bank.find(function (x) { return x.id === id; }) || {question:"", category:CATS[0], modelAnswer:"", keywords:[]};
+    $("eq").value = q.question; $("ec").value = q.category; $("em").value = q.modelAnswer; $("ek").value = q.keywords.join("\n");
+    $("modal").classList.add("show");
+  }
+  $("addQ").addEventListener("click", function () { openEdit(null); });
+  $("cancelEdit").addEventListener("click", function () { $("modal").classList.remove("show"); });
+  $("saveEdit").addEventListener("click", function () {
+    var q = { id: S.edit || uid(), category: $("ec").value, question: $("eq").value.trim(), modelAnswer: $("em").value.trim(), keywords: $("ek").value.split(/[\n,]/).map(function (x) { return x.trim(); }).filter(Boolean) };
+    if (!q.question) return;
+    var i = S.bank.findIndex(function (x) { return x.id === q.id; });
+    if (i < 0) S.bank.push(q); else S.bank[i] = Object.assign({}, S.bank[i], q);
+    saveBank(); $("modal").classList.remove("show"); renderBank();
+  });
+  $("exportMd").addEventListener("click", function () {
+    var t = S.bank.map(function (q, i) { return "**" + (q.no || (i + 1)) + ". " + q.question + "**\n- 모범답안: " + q.modelAnswer + "\n- 키워드: " + q.keywords.join(", ") + "\n"; }).join("\n");
+    var a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([t], {type:"text/markdown"})); a.download = "question-bank.md"; a.click();
+  });
+  $("importMd").addEventListener("click", function () { $("importFile").click(); });
+  $("importFile").addEventListener("change", function (e) {
+    var f = e.target.files[0]; if (!f) return;
+    var r = new FileReader();
+    r.onload = function () {
+      var a = parseMd(r.result);
+      if (!a.length) { alert("문항을 찾지 못했습니다."); return; }
+      a.forEach(function (q) { q.id = uid(); S.bank.push(q); });
+      saveBank(); renderBank();
+    };
+    r.readAsText(f); e.target.value = "";
+  });
+  $("deleteAllBank").addEventListener("click", function () { if (confirm("질문은행의 모든 질문을 삭제할까요?")) { S.bank = []; saveBank(); renderBank(); } });
+  $("restoreBank").addEventListener("click", function () { if (confirm("기본 52문항으로 복원할까요?")) { S.bank = copy(DEFAULT_BANK); saveBank(); renderBank(); } });
+  function cleanup() {
+    stopSTT();
+    clearInterval(S.timer); clearInterval(S.wait); clearInterval(S.auto); S.speaking = false;
+    if (S.stream) S.stream.getTracks().forEach(function (t) { t.stop(); }); S.stream = null;
+    if (S.raf) cancelAnimationFrame(S.raf);
+    if (S.audio) { try { S.audio.close(); } catch (e) {} S.audio = null; }
+  }
+  async function startMedia() {
+    if (IN_APP) return;
+    if (S.stream) return;
+    var stream = null;
+    var tries = IS_IOS
+      ? [{video:{facingMode:"user"}, audio:true}, {video:true, audio:true}, {video:true, audio:false}, {audio:true}]
+      : [{video:{facingMode:"user"}, audio:true}, {video:true, audio:false}, {video:false, audio:true}];
+    for (var i = 0; i < tries.length; i++) { try { stream = await navigator.mediaDevices.getUserMedia(tries[i]); break; } catch (e) {} }
+    S.stream = stream; S.hasCam = !!(stream && stream.getVideoTracks().length); S.hasMic = !!(stream && stream.getAudioTracks().length);
+    if (stream) { $("preview").srcObject = stream; $("selfCam").srcObject = stream; $("preview").play().catch(function () {}); setupMeter(); }
+    $("camMsg").textContent = S.hasCam ? "카메라 연결 완료" : "카메라 없음 — 진행 가능";
+    $("micMsg").textContent = S.hasMic ? "마이크 연결 완료" : "마이크 없음 — 내용 평가 불가";
+    $("spkMsg").textContent = ("speechSynthesis" in window) ? "스피커 사용 가능" : "스피커 확인 불가";
+    var notes = [];
+    if (!S.hasMic) notes.push("마이크가 없어 녹음·음성인식·내용 평가는 불가능합니다. 면접 진행은 가능합니다.");
+    if (IS_IOS) notes.push("아이폰/아이패드 Safari는 설정에서 Siri를 켜 두어야 음성인식이 됩니다. 답변 시작을 누른 뒤 말하면 글자가 뜹니다. 안 되면 입력란에 직접 적어도 평가됩니다.");
+    $("devNote").innerHTML = notes.map(function (n) { return "<p>" + n + "</p>"; }).join("");
+    $("devNote").style.display = notes.length ? "block" : "none";
+  }
+  function setupMeter() {
+    if (!S.hasMic || !S.stream.getAudioTracks().length) return;
+    try {
+      S.audio = new (window.AudioContext || window.webkitAudioContext)();
+      var src = S.audio.createMediaStreamSource(S.stream); S.analyser = S.audio.createAnalyser(); src.connect(S.analyser);
+      var d = new Uint8Array(S.analyser.frequencyBinCount);
+      var tick = function () {
+        S.analyser.getByteTimeDomainData(d);
+        var s = 0; for (var i = 0; i < d.length; i++) s += Math.pow((d[i] - 128) / 128, 2);
+        var r = Math.sqrt(s / d.length); $("meter").style.width = Math.min(100, r * 400) + "%";
+        if (S.speaking && r > 0.025) S.frames += 1; S.raf = requestAnimationFrame(tick);
+      };
+      tick();
+    } catch (e) {}
+  }
+  function speak(t) {
+    return new Promise(function (done) {
+      if (!S.settings || !S.settings.voice || !("speechSynthesis" in window)) { done(); return; }
+      var u = new SpeechSynthesisUtterance(t); u.lang = "ko-KR"; u.onend = done; u.onerror = done; speechSynthesis.cancel(); speechSynthesis.speak(u);
+    });
+  }
+  function startSTT() {
+    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (IN_APP) { $("sttBox").placeholder = "카톡 안에서는 음성인식을 쓰지 않습니다. Safari/Chrome으로 열어 주세요."; return; }
+    if (!SR) { $("sttBox").placeholder = "이 브라우저는 음성인식을 지원하지 않습니다. 답변을 직접 입력해 주세요."; return; }
+    if (!S.hasMic && !IS_IOS) { $("sttBox").placeholder = "마이크가 없어 음성인식을 시작할 수 없습니다. 직접 입력해 주세요."; return; }
+    stopSTT();
+    var rec = new SR();
+    rec.lang = "ko-KR";
+    rec.continuous = !IS_IOS;
+    rec.interimResults = true;
+    rec.maxAlternatives = 1;
+    rec.onresult = function (e) {
+      var t = "";
+      for (var i = 0; i < e.results.length; i++) t += e.results[i][0].transcript + " ";
+      t = t.replace(/\s+/g, " ").trim();
+      if (IS_IOS) S.sttLive = ((S.sttLive || "") + " " + t).replace(/\s+/g, " ").trim();
+      else S.sttLive = t;
+      if (S.speaking) { $("sttBox").value = S.sttLive; $("caption").textContent = S.sttLive; }
+    };
+    rec.onerror = function (e) {
+      if (e.error === "not-allowed" || e.error === "service-not-allowed") S.wantStt = false;
+    };
+    rec.onend = function () {
+      S.stt = null;
+      if (S.wantStt && S.speaking) {
+        try { rec.start(); S.stt = rec; } catch (err) {}
+      }
+    };
+    try { rec.start(); S.stt = rec; S.wantStt = true; }
+    catch (e) { $("sttBox").placeholder = "음성인식을 시작하지 못했습니다. 설정에서 Siri와 Safari 마이크를 허용한 뒤, 답변 시작을 다시 누르거나 직접 입력해 주세요."; }
+  }
+  function stopSTT() {
+    S.wantStt = false;
+    if (S.stt) { try { S.stt.onend = null; S.stt.stop(); } catch (e) {} S.stt = null; }
+  }
+  $("toEquip").addEventListener("click", function () {
+    S.settings = { name:$("student").value, univ:$("univ").value, dept:$("dept").value, type:$("itype").value, count:Number(document.querySelector("input[name='qcount']:checked").value), limit:Number(document.querySelector("input[name='qtime']:checked").value), start:document.querySelector("input[name='startMode']:checked").value, voice:$("voiceOn").checked, save:$("saveOn").checked };
+    if (S.bank.length < S.settings.count) { alert("질문 수가 부족합니다."); return; }
+    go("equipment");
+  });
+  $("readyBtn").addEventListener("click", function () {
+    if (S.audio && S.audio.state === "suspended") S.audio.resume().catch(function () {});
+    go("waiting"); var n = 5; $("waitTime").textContent = "00:05";
+    S.wait = setInterval(function () { n -= 1; $("waitTime").textContent = "00:0" + Math.max(0, n); if (n <= 0) { clearInterval(S.wait); go("door"); } }, 1000);
+  });
+  $("knockBtn").addEventListener("click", async function () { $("doorMsg").textContent = "들어오세요."; await speak("들어오세요."); go("room"); $("startIv").classList.remove("hide"); });
+  function pick(n) {
+    var out = [], used = {};
+    for (var i = 0; i < n; i++) {
+      var cat = CATS[i % CATS.length];
+      var pool = S.bank.filter(function (q) { return q.category === cat && !used[q.id]; });
+      var src = pool.length ? pool : S.bank.filter(function (q) { return !used[q.id]; });
+      if (!src.length) break;
+      var q = copy(src[Math.floor(Math.random() * src.length)]); used[q.id] = true; out.push(q);
+    }
+    return out;
+  }
+  $("startIv").addEventListener("click", async function () {
+    S.session = { student:{name:S.settings.name, univ:S.settings.univ, dept:S.settings.dept}, startedAt:new Date().toISOString(), hasMic:S.hasMic, questions:pick(S.settings.count), settings:copy(S.settings) };
+    S.index = 0; $("startIv").classList.add("hide"); $("qText").textContent = "지금부터 면접을 시작하겠습니다."; await speak("지금부터 면접을 시작하겠습니다."); ask();
+  });
+  async function ask() {
+    if (S.index >= S.session.questions.length) { endIv(); return; }
+    var q = S.session.questions[S.index];
+    $("qProg").textContent = "질문 " + (S.index + 1) + "/" + S.session.questions.length;
+    $("qCat").textContent = q.category; $("qNo").textContent = "QUESTION " + String(S.index + 1).padStart(2, "0"); $("qText").textContent = q.question; $("hint").textContent = "";
+    $("ansStart").classList.add("hide"); $("ansEnd").classList.add("hide"); $("sttWrap").classList.add("hide"); $("sttBox").value = ""; $("caption").textContent = "";
+    await speak(q.question); $("ansStart").classList.remove("hide");
+    if (S.settings.start === "auto") {
+      var n = 5; $("hint").textContent = n + "초 후 답변이 시작됩니다.";
+      S.auto = setInterval(function () { n -= 1; if (n <= 0) { clearInterval(S.auto); beginAns(); } else $("hint").textContent = n + "초 후 답변이 시작됩니다."; }, 1000);
+    } else $("hint").textContent = "답변을 시작해 주세요.";
+  }
+  function recStream() {
+    if (!S.stream) return null;
+    if (IS_IOS) {
+      var vt = S.stream.getVideoTracks();
+      return vt.length ? new MediaStream(vt) : null;
+    }
+    return S.stream;
+  }
+  function beginAns() {
+    if (S.speaking) return;
+    clearInterval(S.auto); S.speaking = true; S.frames = 0; S.started = Date.now(); S.sttLive = "";
+    S.session.questions[S.index].answer = { transcript:"", duration:0 };
+    $("ansStart").classList.add("hide"); $("ansEnd").classList.remove("hide"); $("timer").classList.remove("hide"); $("recMark").classList.remove("hide"); $("sttWrap").classList.remove("hide");
+    $("sttBox").value = ""; $("sttBox").placeholder = "말하면 여기에 글자가 나타납니다. 안 되면 직접 입력해도 평가됩니다.";
+    S.chunks = [];
+    var rs = recStream();
+    if (rs && window.MediaRecorder) {
+      try { S.rec = new MediaRecorder(rs); S.rec.ondataavailable = function (e) { if (e.data && e.data.size) S.chunks.push(e.data); }; S.rec.start(250); } catch (e) { S.rec = null; }
+    }
+    startSTT();
+    S.timer = setInterval(function () {
+      var sec = Math.floor((Date.now() - S.started) / 1000);
+      $("timer").textContent = S.settings.limit ? fmt(sec) + " / " + fmt(S.settings.limit) : fmt(sec);
+      $("recClock").textContent = fmt(sec);
+      if (S.settings.limit && sec >= S.settings.limit) finishAns();
+    }, 200);
+  }
+  $("ansStart").addEventListener("click", beginAns);
+  $("ansEnd").addEventListener("click", finishAns);
+  function finishAns() {
+    if (!S.speaking) return;
+    S.speaking = false; clearInterval(S.timer); stopSTT();
+    $("ansEnd").classList.add("hide"); $("recMark").classList.add("hide");
+    var q = S.session.questions[S.index];
+    q.answer.duration = Math.round((Date.now() - S.started) / 1000);
+    q.answer.frames = S.frames;
+    q.answer.transcript = ($("sttBox").value || S.sttLive || "").trim();
+    var next = function () { q.evaluation = evaluate(q); S.index += 1; setTimeout(ask, 400); };
+    if (S.rec && S.rec.state !== "inactive") { S.rec.onstop = function () { q.answer.url = URL.createObjectURL(new Blob(S.chunks, {type: S.rec.mimeType})); next(); }; S.rec.stop(); } else next();
+  }
+  function tokens(s) { return (s || "").replace(/[^\w가-힣\s]/g, " ").split(/\s+/).filter(function (w) { return w.length >= 2 && STOP.indexOf(w) < 0; }); }
+  function cover(ans, ref) {
+    if (!ref.length) return 0;
+    var a = ans.join(" "), hit = 0;
+    ref.forEach(function (w) { if (w.length >= 2 && a.indexOf(w) >= 0) hit += 1; });
+    return hit / ref.length;
+  }
+  function evaluate(q) {
+    var t = (q.answer && q.answer.transcript) || "";
+    var frames = (q.answer && q.answer.frames) || 0;
+    if (!t && frames < 8) return { score:0, empty:true, criteria:{}, strengths:[], weaknesses:["답변 텍스트가 없어 내용 평가를 할 수 없습니다. 음성인식이 안 되면 답변란에 직접 입력해 주세요."] };
+    var aTok = tokens(t), qTok = tokens(q.question), mTok = tokens(q.modelAnswer);
+    var qFit = cover(aTok, qTok), themeFit = cover(aTok, mTok), topic = Math.max(qFit, themeFit * 0.85);
+    var restatesOnly = qFit > 0.7 && aTok.length < qTok.length + 8 && themeFit < 0.12;
+    var opinion = /생각합니다|저는 |제 생각|판단하|의견/.test(t);
+    var reason = /때문|왜냐|이유|따라서|그래서|즉 |결국|반면|또한|이에/.test(t);
+    var example = /예를 들어|경험|봉사|동아리|고등학교|실제로|당시|수업|활동|실습|탐구/.test(t);
+    var ending = /하겠습니다|되고 싶|기여하|노력하|배우겠/.test(t);
+    var structure = /첫째|둘째|우선|결론|마지막|세 가지/.test(t) || (opinion && reason && example);
+    var uniqueRatio = aTok.length ? tokens(t).filter(function (w, i, arr) { return arr.indexOf(w) === i; }).length / aTok.length : 0;
+    var tooShort = t.replace(/\s/g, "").length < 40;
+    var decentLen = t.replace(/\s/g, "").length >= 80;
+    var used = (q.keywords || []).filter(function (k) { return t.replace(/\s/g, "").indexOf(String(k).replace(/\s/g, "")) >= 0; });
+    var c = {
+      "질문 대응·맥락": restatesOnly ? 2 : Math.min(5, 1 + Math.round(topic * 4) + (decentLen ? 1 : 0)),
+      "의견·논리": Math.min(5, 1 + (reason ? 2 : 0) + (opinion && reason ? 1 : 0)),
+      "근거·사례": Math.min(5, 1 + (example ? 3 : 0) + (uniqueRatio > 0.55 ? 1 : 0)),
+      "답변 구성": Math.min(5, 1 + (opinion ? 1 : 0) + (reason && example ? 1 : 0) + (ending ? 1 : 0) + (structure ? 1 : 0)),
+      "표현 명확성": tooShort ? 2 : (decentLen ? 4 : 3)
+    };
+    var base = Object.keys(c).reduce(function (s, k) { return s + c[k]; }, 0);
+    var score = Math.max(0, Math.min(100, Math.round((base / 25) * 94 + Math.min(6, used.length * 2))));
+    var good = [], bad = [];
+    if (c["질문 대응·맥락"] >= 4 && !restatesOnly) good.push("질문의 핵심에서 벗어나지 않고 답했습니다.");
+    if (opinion && reason) good.push("자신의 입장과 이유를 함께 말했습니다.");
+    if (example) good.push("경험이나 구체적 사례로 내용을 뒷받침했습니다.");
+    if (ending) good.push("앞으로의 다짐이나 실행 계획으로 마무리했습니다.");
+    if (used.length) good.push("관련 키워드를 답변 소재로 활용했습니다.");
+    if (restatesOnly) bad.push("질문 문장을 반복하기보다, 자신의 판단과 근거를 보강해 보세요.");
+    if (!reason) bad.push("왜 그렇게 생각하는지를 한두 문장으로 연결해 보세요.");
+    if (!example) bad.push("추상적 설명만 있지 않게, 본인 경험이나 장면을 하나 넣어 보세요.");
+    if (tooShort) bad.push("답변이 짧아 맥락이 잘 드러나지 않습니다.");
+    if (!ending) bad.push("마지막에 입학 후 행동이나 전공 연결을 한 문장 덧붙이면 완성도가 높아집니다.");
+    return { score:score, criteria:c, strengths:good, weaknesses:bad, keyUsed:used.length, keyTotal:(q.keywords||[]).length, topic:Math.round(topic*100) };
+  }
+  function endIv() {
+    var ev = S.session.questions.map(function (q) { return q.evaluation; });
+    var valid = ev.filter(function (e) { return !e.empty && !e.unevaluable; });
+    var total = valid.length ? Math.round(valid.reduce(function (s, e) { return s + e.score; }, 0) / valid.length) : 0;
+    var keys = ["질문 대응·맥락","의견·논리","근거·사례","답변 구성","표현 명확성"], bars = {};
+    keys.forEach(function (k) { bars[k] = valid.length ? Math.round(valid.reduce(function (s, e) { return s + (e.criteria[k] || 0); }, 0) / valid.length * 20) : 0; });
+    function uniq(a) { return a.filter(function (x, i) { return a.indexOf(x) === i; }); }
+    S.session.result = { total:total, bars:bars, strengths:uniq(valid.flatMap(function (e) { return e.strengths; })).slice(0,4), weaknesses:uniq(ev.flatMap(function (e) { return e.weaknesses; })).slice(0,4) };
+    $("qText").textContent = "수고하셨습니다. 여기까지 하겠습니다."; $("showRes").classList.remove("hide"); $("sttWrap").classList.add("hide");
+    speak("수고하셨습니다. 여기까지 하겠습니다.");
+    if (S.settings.save) { var h = loadHist(); h.unshift({ id:uid(), savedAt:new Date().toISOString(), data:copy(S.session) }); saveHist(h.slice(0, 30)); }
+  }
+  $("showRes").addEventListener("click", function () { renderReport(S.session); go("report"); });
+  function renderReport(s) {
+    $("meta").textContent = (s.student.name || "학생") + " · " + (s.student.univ || "-") + " " + (s.student.dept || "") + " · " + new Date(s.startedAt).toLocaleString();
+    $("total").textContent = s.result.total; $("note").style.display = "block";
+    $("note").textContent = s.hasMic ? "평가는 모범답안 암기가 아니라, 질문 맥락에서 의견·근거·사례가 어우러졌는지를 봅니다. 키워드 미사용은 감점하지 않습니다." : "마이크가 없어 답변 내용 평가가 불가능합니다.";
+    $("bars").innerHTML = Object.keys(s.result.bars).map(function (k) { return "<div><div class='barlab'><span>" + k + "</span><span>" + s.result.bars[k] + "</span></div><div class='track'><i class='fill' style='width:" + s.result.bars[k] + "%'></i></div></div>"; }).join("");
+    $("good").innerHTML = s.result.strengths.length ? s.result.strengths.map(function (x) { return "<li>" + x + "</li>"; }).join("") : "<li>해당 없음</li>";
+    $("bad").innerHTML = s.result.weaknesses.map(function (x) { return "<li>" + x + "</li>"; }).join("");
+    $("goal").textContent = "다음 연습: 결론 → 이유 → 본인 경험/예시 → 전공 연결 순서로 답해 보세요.";
+    $("qres").innerHTML = s.questions.map(function (q, i) {
+      var e = q.evaluation, lab = e.empty ? "미응답 0" : (e.unevaluable ? "평가 불가" : e.score + "/100");
+      return "<button type='button' class='item wide' data-r='" + i + "'><span>Q" + (i + 1) + " · " + q.category + "</span><span>" + lab + "</span></button>";
+    }).join("");
+    $("qres").querySelectorAll("[data-r]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var q = s.questions[Number(b.getAttribute("data-r"))], e = q.evaluation;
+        $("detail").classList.remove("hide");
+        $("detail").innerHTML = "<p><b>" + q.question + "</b></p><p>답변: " + ((q.answer && q.answer.transcript) || "(인식된 텍스트 없음)") + "</p><p class='tiny'>질문 맥락 부합 " + (e.topic || 0) + "% · 키워드 활용 " + (e.keyUsed || 0) + " / " + (e.keyTotal || q.keywords.length) + " (미사용 감점 없음)</p><details><summary>모범답안 참고</summary><p>" + q.modelAnswer + "</p></details>";
+      });
+    });
+  }
+  $("printBtn").addEventListener("click", function () { window.print(); });
+  function renderHistory() {
+    var h = loadHist();
+    $("histList").innerHTML = h.map(function (x, i) {
+      return "<div class='item'><button type='button' class='link' data-o='" + i + "'><p>" + new Date(x.savedAt).toLocaleString() + "</p><p class='tiny'>" + x.data.student.univ + " · " + x.data.result.total + "점 · " + x.data.questions.length + "문항</p></button><button type='button' class='btn danger' data-x='" + i + "'>삭제</button></div>";
+    }).join("") || "<p class='muted'>저장된 결과가 없습니다.</p>";
+    $("histList").querySelectorAll("[data-o]").forEach(function (b) { b.addEventListener("click", function () { S.session = loadHist()[Number(b.getAttribute("data-o"))].data; renderReport(S.session); go("report"); }); });
+    $("histList").querySelectorAll("[data-x]").forEach(function (b) { b.addEventListener("click", function () { if (!confirm("이 기록을 삭제할까요?")) return; var a = loadHist(); a.splice(Number(b.getAttribute("data-x")), 1); saveHist(a); renderHistory(); }); });
+  }
+  $("delAllHist").addEventListener("click", function () { if (confirm("저장된 모든 기록을 삭제할까요?")) { saveHist([]); renderHistory(); } });
+  function fmt(n) { return String(Math.floor(n / 60)).padStart(2, "0") + ":" + String(n % 60).padStart(2, "0"); }
+  S.bank = loadBank();
+  $("bankInfo").textContent = "기본 문제은행 " + S.bank.length + "문항";
+});
+</script>
+</body></html>
