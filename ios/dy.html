@@ -33,18 +33,15 @@ header{position:sticky;top:0;z-index:20;border-bottom:1px solid #2a3342;backgrou
 @media print{body *{visibility:hidden}#printArea,#printArea *{visibility:visible}#printArea{position:absolute;left:0;top:0;width:100%;color:#111;background:#fff}}
 
 html{-webkit-text-size-adjust:100%}
-body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
-input,textarea,select,textarea{font-size:16px}
-.btn,[data-go]{min-height:44px;touch-action:manipulation;position:relative;z-index:2}
+input,textarea,select{font-size:16px}
+.btn,[data-go]{min-height:44px;touch-action:manipulation}
 .btn:disabled{opacity:.45}
-.screen.active{position:relative;z-index:1}
-video{pointer-events:none!important;max-width:100%}
-header{z-index:30}
+video{pointer-events:none!important}
+#sttSpeakBtn,#micGrantBtn{width:100%;margin-top:8px}
 @media (max-width:720px){
 .equipGrid{grid-template-columns:1fr !important}
 .hero h2{font-size:28px}
 #qText{font-size:18px !important}
-#selfCam{width:160px !important;height:100px !important}
 }
 </style><script>
 function goScreen(name) {
@@ -67,8 +64,7 @@ function goScreen(name) {
 (function () {
   var last = 0;
   function fromEvent(e) {
-    var n = e.target;
-    var go = "";
+    var n = e.target, go = "";
     while (n && n !== document) {
       if (n.getAttribute && n.getAttribute("data-go")) { go = n.getAttribute("data-go"); break; }
       if (n.id === "homeBtn") { go = "home"; break; }
@@ -82,16 +78,6 @@ function goScreen(name) {
   }
   document.addEventListener("click", fromEvent, true);
   document.addEventListener("touchend", fromEvent, true);
-  window.onerror = function (msg, src, line) {
-    window.__bootErr = String(msg) + " @" + line;
-  };
-  setTimeout(function () {
-    if (window.__appReady) return;
-    var d = document.createElement("div");
-    d.style.cssText = "position:fixed;left:8px;right:8px;bottom:8px;z-index:100;background:#3a1515;color:#fff;padding:12px;border-radius:8px;font-size:14px";
-    d.textContent = "화면 이동은 됩니다. 기능 스크립트 오류: " + (window.__bootErr || "확인 필요");
-    document.body.appendChild(d);
-  }, 1600);
 })();
 </script>
 </head><body>
@@ -108,7 +94,7 @@ function goScreen(name) {
 <section class="screen" id="bank"><div class="wrap" style="padding-top:24px;padding-bottom:40px"><div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:center"><h2>질문은행 <span class="muted" id="bankCount"></span></h2><div class="btns"><button type="button" class="btn gold" id="addQ">질문 추가</button><button type="button" class="btn" id="importMd">MD 가져오기</button><button type="button" class="btn" id="exportMd">MD 내보내기</button><button type="button" class="btn danger" id="deleteAllBank">모두 삭제</button><button type="button" class="btn" id="restoreBank">기본 52문항 복원</button></div></div><div style="margin:12px 0;display:flex;gap:8px"><input id="bankSearch" class="field" placeholder="질문 검색" style="max-width:240px"><select id="bankCat" class="field" style="max-width:180px"></select></div><div id="bankList"></div></div></section>
 <div class="modal" id="modal"><div class="card" style="width:min(520px,100%)"><label>질문<textarea id="eq" class="field" rows="3"></textarea></label><label>유형<select id="ec" class="field"><option>인성 및 품행</option><option>사회성</option><option>지원학과이해</option><option>문제해결능력</option></select></label><label>모범답안<textarea id="em" class="field" rows="4"></textarea></label><label>키워드<textarea id="ek" class="field" rows="3"></textarea></label><div style="margin-top:12px;text-align:right"><button type="button" class="btn" id="cancelEdit">취소</button> <button type="button" class="btn gold" id="saveEdit">저장</button></div></div></div>
 <section class="screen" id="settings"><div class="wrap" style="padding-top:24px;max-width:760px"><h2>면접 설정</h2><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><label>학생 이름<input id="student" class="field"></label><label>지원 대학<input id="univ" class="field" value="우송대학교"></label><label>지원 학과<input id="dept" class="field" value="작업치료학과"></label><label>면접 유형<select id="itype" class="field"><option>교과면접</option><option>학생부 기반</option><option>혼합형</option></select></label></div><p>질문 수</p><div id="qCounts"></div><p>답변 제한시간</p><div id="qTimes"></div><p>답변 시작</p><label class="opt"><input type="radio" name="startMode" value="button" checked> 버튼으로 시작</label><label class="opt"><input type="radio" name="startMode" value="auto"> 5초 후 자동 시작</label><p id="iosStartNote" class="tiny hide">아이폰·아이패드는 답변 시작을 눌러야 받아쓰기가 켜집니다.</p><p><label class="opt"><input id="voiceOn" type="checkbox" checked> 질문 음성</label><label class="opt"><input id="saveOn" type="checkbox" checked> 결과 저장</label></p><div style="text-align:right"><button type="button" class="btn gold" id="toEquip">장비 점검</button></div></div></section>
-<section class="screen" id="equipment"><div class="wrap" style="padding-top:24px"><h2>장비 점검</h2><p id="equipLead" class="muted">카메라·마이크는 여기서 한 번만 연결합니다. 음성인식은 답변 시작 시 Chrome에서 가장 잘 동작합니다.</p><p id="devNote" class="card" style="display:none;border-color:#c4a35a"></p><div id="iosEquipBox" class="card hide" style="margin-bottom:16px"><p style="margin-top:0">아이폰·아이패드 받아쓰기 확인</p><p class="tiny">한 문장 테스트를 누른 뒤 마이크 허용이 뜨면 허용하고 바로 말하세요. 글자가 보이면 입장할 수 있습니다.</p><div class="btns" style="flex-wrap:wrap;margin:8px 0"><button type="button" class="btn gold" id="sttTestBtn">한 문장 테스트</button><button type="button" class="btn" id="micConnectBtn">마이크 레벨</button><button type="button" class="btn" id="camConnectBtn">카메라(선택)</button></div><p id="sttTestOut" class="card" style="background:#0c1016">아직 테스트 전입니다.</p><p class="tiny">Safari 마이크 허용과 인터넷 연결이 필요합니다. 설정 &gt; 일반 &gt; 키보드 &gt; 받아쓰기도 켜 두세요.</p></div><div class="equipGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:16px"><div class="card"><video id="preview" muted playsinline webkit-playsinline preload="none" style="width:100%;aspect-ratio:16/9;background:#000;border-radius:8px"></video><p id="camMsg"></p></div><div class="card"><p>마이크</p><div style="height:8px;background:#2a3342;border-radius:99px;overflow:hidden"><i id="meter"></i></div><p id="micMsg"></p><p id="spkMsg"></p></div></div><div style="text-align:right;margin-top:16px"><button type="button" class="btn gold" id="readyBtn">준비 완료</button></div></div></section>
+<section class="screen" id="equipment"><div class="wrap" style="padding-top:24px"><h2>장비 점검</h2><p id="equipLead" class="muted">카메라·마이크는 여기서 한 번만 연결합니다. 음성인식은 답변 시작 시 Chrome에서 가장 잘 동작합니다.</p><p id="devNote" class="card" style="display:none;border-color:#c4a35a"></p><div id="iosEquipBox" class="card hide" style="margin-bottom:16px"><p style="margin-top:0">아이폰 받아쓰기 두 단계</p><p id="iosEquipHelp" class="tiny">1번에서 허용을 누릅니다. 허용 창은 그때 한 번만 뜨고, 그 뒤에는 다시 뜨지 않습니다. 이어서 노란 2번을 누르고 바로 말하세요.</p><button type="button" class="btn" id="micGrantBtn">1. 마이크 허용</button><button type="button" class="btn gold" id="sttSpeakBtn">2. 누르고 말하기</button><div class="btns" style="flex-wrap:wrap;margin-top:8px"><button type="button" class="btn" id="micConnectBtn">마이크 레벨</button><button type="button" class="btn" id="camConnectBtn">카메라(선택)</button></div><p id="sttTestOut" class="card" style="background:#0c1016;min-height:48px">아직 말하기 전입니다.</p></div><div class="equipGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:16px"><div class="card"><video id="preview" muted playsinline webkit-playsinline preload="none" style="width:100%;aspect-ratio:16/9;background:#000;border-radius:8px"></video><p id="camMsg"></p></div><div class="card"><p>마이크</p><div style="height:8px;background:#2a3342;border-radius:99px;overflow:hidden"><i id="meter"></i></div><p id="micMsg"></p><p id="spkMsg"></p></div></div><div style="text-align:right;margin-top:16px"><button type="button" class="btn gold" id="readyBtn">준비 완료</button></div></div></section>
 <section class="screen room" id="waiting"><div class="hero"><h2>면접 대기실</h2><p id="waitTime" style="font-size:48px;color:#c4a35a">00:05</p></div></section>
 <section class="screen room" id="door"><div class="hero"><div style="width:200px;height:300px;background:#4e3928;border:8px solid #2a1e15;margin-bottom:20px"></div><button type="button" class="btn gold" id="knockBtn">똑똑</button><p id="doorMsg"></p></div></section>
 <section class="screen room" id="room"><div class="wrap" style="padding-top:16px"><div style="display:flex;justify-content:space-between" class="tiny"><span id="qProg">질문 0/0</span><span id="recMark" class="hide" style="color:#f0b4b4">● 녹화중 <span id="recClock">00:00</span></span></div><div class="card" style="min-height:70vh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,.2)"><p class="tiny" id="qCat"></p><p id="qNo" style="letter-spacing:.2em;color:#c4a35a">QUESTION</p><p id="qText" style="font-size:22px;text-align:center;max-width:720px"></p><p class="muted" id="hint"></p><p id="timer" class="hide" style="font-size:24px"></p><p class="tiny" id="caption"></p><div id="sttWrap" class="hide" style="width:min(640px,100%);margin:8px 0 12px"><textarea id="sttBox" class="field" rows="5" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="말하면 글자가 나타납니다. 안 되면 직접 입력하세요."></textarea><p id="sttStatus" class="tiny"></p><button type="button" class="btn gold hide" id="sttResume">계속 받아쓰기</button></div><video id="selfCam" muted playsinline webkit-playsinline preload="none" style="width:240px;height:150px;background:#000;border-radius:8px"></video><div class="btns" style="margin-top:12px"><button type="button" class="btn gold" id="startIv">면접 시작</button><button type="button" class="btn gold hide" id="ansStart">답변 시작</button><button type="button" class="btn danger hide" id="ansEnd">답변 마침</button><button type="button" class="btn gold hide" id="showRes">결과 확인</button></div></div></div></section>
@@ -124,7 +110,7 @@ document.addEventListener("DOMContentLoaded", function () {
   function $(id) { return document.getElementById(id); }
   var screens = {};
   ["home","guide","review","bank","settings","equipment","waiting","door","room","report","history"].forEach(function (k) { screens[k] = $(k); });
-  var S = {bank:[], cand:[], sel:0, edit:null, stream:null, audio:null, analyser:null, raf:0, rec:null, chunks:[], session:null, index:0, speaking:false, timer:0, wait:0, auto:0, started:0, frames:0, hasMic:false, hasCam:false, settings:null, stt:null, wantStt:false, sttGen:0, sttMode:"", sttPassed:false, finals:"", sessionFin:"", interim:"", lastFinal:"", userOwned:false, prog:false, failStreak:0, sttBlocked:false, heardAudio:false, recStartedAt:0, lastResultAt:0, restartTimer:0, testHold:0, watchdog:0};
+  var S = {bank:[], cand:[], sel:0, edit:null, stream:null, audio:null, analyser:null, raf:0, rec:null, chunks:[], session:null, index:0, speaking:false, timer:0, wait:0, auto:0, started:0, frames:0, hasMic:false, hasCam:false, settings:null, stt:null, wantStt:false, sttGen:0, sttMode:"", sttPassed:false, finals:"", sessionFin:"", interim:"", lastFinal:"", userOwned:false, prog:false, failStreak:0, sttBlocked:false, heardAudio:false, recStartedAt:0, lastResultAt:0, restartTimer:0, testHold:0, watchdog:0, meterOff:0, micGranted:false};
   function copy(x) { return JSON.parse(JSON.stringify(x)); }
   function uid() { return "id" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
   function loadBank() {
@@ -246,18 +232,23 @@ document.addEventListener("DOMContentLoaded", function () {
   function setSttStatus(t) {
     var el = $("sttStatus");
     if (el && S.sttMode !== "test") el.textContent = t || "";
-    var out = $("sttTestOut");
-    if (out && S.sttMode === "test" && t) out.textContent = t;
+    if ($("sttTestOut") && S.sttMode === "test" && t) $("sttTestOut").textContent = t;
   }
   function showResume() {
     var b = $("sttResume");
     if (b && S.speaking && S.sttMode !== "test") b.classList.remove("hide");
   }
   function hideResume() { var b = $("sttResume"); if (b) b.classList.add("hide"); }
+  function noteRetry(msg) {
+    var b = $("sttSpeakBtn");
+    if (b) { b.disabled = false; b.classList.add("gold"); b.textContent = "다시 누르고 말하기"; }
+    if ($("sttTestOut")) $("sttTestOut").textContent = msg;
+    if ($("readyBtn") && !S.sttPassed) { $("readyBtn").disabled = true; $("readyBtn").textContent = "말하기 성공 후 입장"; }
+  }
   function unlockSpeech() {
     if (!window.speechSynthesis) return;
     try { speechSynthesis.getVoices(); } catch (e) {}
-    try { speechSynthesis.resume(); } catch (e) {}
+    try { speechSynthesis.resume(); } catch (e2) {}
   }
   function koVoice() {
     if (!window.speechSynthesis) return null;
@@ -284,6 +275,7 @@ document.addEventListener("DOMContentLoaded", function () {
     return out;
   }
   function releaseAudioTracks() {
+    clearTimeout(S.meterOff);
     if (S.raf) { cancelAnimationFrame(S.raf); S.raf = 0; }
     if (S.audio) { try { S.audio.close(); } catch (e) {} S.audio = null; S.analyser = null; }
     if (!S.stream) return;
@@ -294,19 +286,21 @@ document.addEventListener("DOMContentLoaded", function () {
   function attachPreview(stream) {
     if (!stream) return;
     var preview = $("preview"), selfCam = $("selfCam");
-    if (preview) { preview.srcObject = stream; preview.play().catch(function () {}); }
-    if (selfCam) { selfCam.srcObject = stream; selfCam.play().catch(function () {}); }
+    if (preview) { preview.srcObject = stream; var p = preview.play(); if (p && p.catch) p.catch(function () {}); }
+    if (selfCam) { selfCam.srcObject = stream; var q = selfCam.play(); if (q && q.catch) q.catch(function () {}); }
   }
   function cleanup() {
     stopSTT();
-    clearInterval(S.timer); clearInterval(S.wait); clearInterval(S.auto); clearTimeout(S.testHold); S.speaking = false;
+    clearInterval(S.timer); clearInterval(S.wait); clearInterval(S.auto); clearTimeout(S.testHold); clearTimeout(S.meterOff);
+    S.speaking = false;
     if (S.stream) S.stream.getTracks().forEach(function (t) { try { t.stop(); } catch (e) {} });
     S.stream = null;
     if (S.raf) cancelAnimationFrame(S.raf);
     if (S.audio) { try { S.audio.close(); } catch (e) {} S.audio = null; }
-    try { if (window.speechSynthesis) speechSynthesis.cancel(); } catch (e) {}
+    try { if (window.speechSynthesis) speechSynthesis.cancel(); } catch (e2) {}
   }
   async function startMedia() {
+    if (isIOS()) return;
     if (S.stream && S.stream.getTracks().some(function (t) { return t.readyState === "live"; })) return;
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       $("devNote").textContent = "이 브라우저는 마이크 연결을 지원하지 않습니다.";
@@ -314,9 +308,7 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
     var stream = null;
-    var tries = isIOS()
-      ? [{audio:{echoCancellation:true, noiseSuppression:true, autoGainControl:true}, video:false}]
-      : [{video:{facingMode:"user"}, audio:true}, {video:true, audio:false}, {video:false, audio:true}];
+    var tries = [{video:{facingMode:"user"}, audio:true}, {video:true, audio:false}, {video:false, audio:true}];
     for (var i = 0; i < tries.length; i++) {
       try { stream = await navigator.mediaDevices.getUserMedia(tries[i]); break; } catch (e) {}
     }
@@ -327,7 +319,7 @@ document.addEventListener("DOMContentLoaded", function () {
     $("camMsg").textContent = S.hasCam ? "카메라 연결 완료" : "카메라 없음 — 진행 가능";
     $("micMsg").textContent = S.hasMic ? "마이크 연결 완료" : "마이크 없음 — 내용 평가 불가";
     $("spkMsg").textContent = ("speechSynthesis" in window) ? "스피커 사용 가능" : "스피커 확인 불가";
-    $("devNote").textContent = S.hasMic ? "" : "마이크가 없어 녹음·음성인식·내용 평가는 불가능합니다. 면접 진행은 가능합니다.";
+    $("devNote").textContent = S.hasMic ? "" : "마이크가 없어 녹음·음성인식·내용 평가는 불가능합니다.";
     $("devNote").style.display = S.hasMic ? "none" : "block";
   }
   function setupMeter() {
@@ -346,7 +338,7 @@ document.addEventListener("DOMContentLoaded", function () {
         var s = 0;
         for (var i = 0; i < d.length; i++) s += Math.pow((d[i] - 128) / 128, 2);
         var r = Math.sqrt(s / d.length);
-        $("meter").style.width = Math.min(100, r * 400) + "%";
+        if ($("meter")) $("meter").style.width = Math.min(100, r * 400) + "%";
         if (S.speaking && r > 0.025) S.frames += 1;
         S.raf = requestAnimationFrame(tick);
       };
@@ -376,7 +368,6 @@ document.addEventListener("DOMContentLoaded", function () {
           if (!isIOS()) speechSynthesis.cancel();
           speechSynthesis.resume();
           speechSynthesis.speak(u);
-          if (isIOS()) setTimeout(function () { try { speechSynthesis.resume(); } catch (e) {} }, 250);
         } catch (e2) { next(); }
       }
       unlockSpeech();
@@ -440,13 +431,13 @@ document.addEventListener("DOMContentLoaded", function () {
     S.interim = inter;
     if (S.sttMode === "test") {
       var shown = normText(fin || inter);
-      if ($("sttTestOut")) $("sttTestOut").textContent = shown ? ("인식 중: " + shown) : "듣는 중 — 지금 말하세요";
+      if ($("sttTestOut")) $("sttTestOut").textContent = shown ? ("인식 중: " + shown) : "듣는 중";
       if (shown.length >= 2) {
         clearTimeout(S.testHold);
         S.testHold = setTimeout(function () {
           if (S.sttMode !== "test" || S.sttPassed) return;
           passTest(normText(S.sessionFin || S.interim || shown));
-        }, 650);
+        }, 500);
       }
       return;
     }
@@ -456,9 +447,13 @@ document.addEventListener("DOMContentLoaded", function () {
   function passTest(text) {
     if (!text || text.length < 2) return;
     S.sttPassed = true;
-    if ($("sttTestOut")) $("sttTestOut").textContent = "인식 성공: " + text;
-    if ($("readyBtn")) { $("readyBtn").disabled = false; $("readyBtn").textContent = "준비 완료"; }
+    if ($("sttTestOut")) $("sttTestOut").textContent = "인식 성공: " + text + "  아래 입장하기를 누르세요.";
+    var btn = $("readyBtn");
+    if (btn) { btn.disabled = false; btn.textContent = "입장하기"; btn.classList.add("gold"); }
+    var speakBtn = $("sttSpeakBtn");
+    if (speakBtn) speakBtn.textContent = "인식 성공";
     stopSTT();
+    try { if (btn) btn.scrollIntoView({block:"center"}); } catch (e) {}
   }
   function onRecError(e) {
     var err = (e && e.error) || "";
@@ -466,13 +461,15 @@ document.addEventListener("DOMContentLoaded", function () {
     if (err === "not-allowed" || err === "service-not-allowed") {
       S.sttBlocked = true;
       S.failStreak += 1;
-      var msg = "마이크 허용이 거절되었습니다. Safari 설정에서 마이크를 허용한 뒤 다시 눌러 주세요.";
-      setSttStatus(msg);
-      if ($("sttTestOut") && S.sttMode === "test") $("sttTestOut").textContent = msg;
+      if (S.sttMode === "test") {
+        noteRetry("허용 창에서 허용을 눌렀다면, 그 창은 다시 뜨지 않습니다. 노란 '다시 누르고 말하기'를 누르고 바로 말하세요.");
+        return;
+      }
+      setSttStatus("마이크 허용이 필요합니다. Safari 설정에서 마이크를 허용해 주세요.");
       showResume();
       return;
     }
-    if (err === "network") setSttStatus("네트워크가 불안정합니다. 받아쓰기를 다시 연결합니다.");
+    if (err === "network" && S.sttMode === "test") noteRetry("네트워크가 없어 받아쓰기가 멈추었습니다. 인터넷 연결 후 노란 버튼을 다시 누르세요.");
   }
   function haltRec() {
     clearTimeout(S.restartTimer);
@@ -489,20 +486,21 @@ document.addEventListener("DOMContentLoaded", function () {
     rec.interimResults = true;
     rec.continuous = !isIOS();
     rec.maxAlternatives = 1;
-    rec.onresult = function (e) { if (gen !== S.sttGen) return; onRecResult(e); };
-    rec.onerror = function (e) { if (gen !== S.sttGen) return; onRecError(e); };
+    rec.onresult = function (ev) { if (gen !== S.sttGen) return; onRecResult(ev); };
+    rec.onerror = function (ev) { if (gen !== S.sttGen) return; onRecError(ev); };
     rec.onend = function () { if (gen !== S.sttGen) return; onRecEnd(); };
     rec.onaudiostart = function () {
       if (gen !== S.sttGen) return;
       S.heardAudio = true;
-      setSttStatus(mode === "test" ? "듣는 중 — 지금 말하세요" : "듣는 중");
+      if (mode === "test" && $("sttTestOut")) $("sttTestOut").textContent = "듣는 중 — 지금 말하세요";
+      else setSttStatus("듣는 중");
     };
   }
   function tryRestartSync() {
     var Ctor = SR();
     if (!Ctor || !S.wantStt || S.sttBlocked) return false;
-    if (S.sttMode === "test" && S.sttPassed) return false;
-    if (S.sttMode !== "test" && !S.speaking) return false;
+    if (S.sttMode === "test") return false;
+    if (!S.speaking) return false;
     var rec = new Ctor();
     var gen = ++S.sttGen;
     bindRec(rec, gen, S.sttMode);
@@ -513,7 +511,6 @@ document.addEventListener("DOMContentLoaded", function () {
       S.heardAudio = false;
       hideResume();
       setSttStatus("이어서 듣는 중");
-      armWatchdog();
       return true;
     } catch (err) {
       S.failStreak += 1;
@@ -521,47 +518,37 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
   function onRecEnd() {
+    var heard = normText(S.sessionFin || S.interim);
     commitSession();
     S.stt = null;
+    if (S.sttMode === "test") {
+      if (!S.sttPassed) {
+        if (heard.length >= 2) passTest(heard);
+        else noteRetry("허용은 끝났습니다. 허용 버튼은 다시 뜨지 않습니다. 노란 버튼을 누르고 바로 말하세요.");
+      }
+      return;
+    }
     if (!S.wantStt || S.sttBlocked) { showResume(); return; }
-    if (S.sttMode === "test" && S.sttPassed) return;
-    if (S.sttMode !== "test" && !S.speaking) return;
+    if (!S.speaking) return;
     var lived = Date.now() - (S.recStartedAt || Date.now());
     if (lived < 500 && !S.heardAudio) S.failStreak += 1;
     else S.failStreak = 0;
-    if (S.failStreak >= 3) {
-      setSttStatus("받아쓰기가 바로 꺼졌습니다. 계속 받아쓰기를 눌러 주세요.");
-      showResume();
-      return;
-    }
+    if (S.failStreak >= 3) { setSttStatus("받아쓰기가 꺼졌습니다. 계속 받아쓰기를 눌러 주세요."); showResume(); return; }
     if (!tryRestartSync()) {
       S.restartTimer = setTimeout(function () {
-        if (!S.wantStt) return;
+        if (!S.wantStt || !S.speaking) return;
         if (!tryRestartSync()) showResume();
       }, 280);
     }
   }
-  function armWatchdog() {
-    if (S.watchdog) clearInterval(S.watchdog);
-    if (!isIOS()) return;
-    S.watchdog = setInterval(function () {
-      if (!S.wantStt || !S.stt) return;
-      if (S.heardAudio || (S.lastResultAt && S.lastResultAt > S.recStartedAt + 200)) return;
-      if (Date.now() - S.recStartedAt > 8000) {
-        try { S.stt.abort(); } catch (e) {}
-      }
-    }, 1500);
-  }
   function launchRec(mode) {
     var Ctor = SR();
     if (!Ctor) {
-      var msg = "이 브라우저는 음성인식을 지원하지 않습니다. 답변을 직접 입력하면 평가에 반영됩니다.";
-      if ($("sttBox")) $("sttBox").placeholder = msg;
-      setSttStatus(msg);
+      if ($("sttTestOut")) $("sttTestOut").textContent = "이 브라우저는 음성인식을 지원하지 않습니다. Safari로 열어 주세요.";
       return false;
     }
     if (!window.isSecureContext) {
-      setSttStatus("https 주소가 아니면 아이폰 음성인식이 켜지지 않습니다.");
+      if ($("sttTestOut")) $("sttTestOut").textContent = "https 주소가 아니면 아이폰 음성인식이 켜지지 않습니다.";
       return false;
     }
     haltRec();
@@ -581,13 +568,12 @@ document.addEventListener("DOMContentLoaded", function () {
       S.lastResultAt = Date.now();
       S.heardAudio = false;
       hideResume();
-      setSttStatus(mode === "test" ? "듣는 중 — 지금 말하세요" : "듣는 중");
-      armWatchdog();
+      if (mode === "test" && $("sttTestOut")) $("sttTestOut").textContent = "듣는 중 — 허용 창이 뜨면 허용한 뒤, 이 버튼을 다시 누르고 말하세요.";
+      else setSttStatus("듣는 중");
       return true;
     } catch (e) {
-      S.failStreak += 1;
-      setSttStatus("음성인식을 시작하지 못했습니다. 버튼을 다시 눌러 주세요.");
-      showResume();
+      if (mode === "test") noteRetry("지금 말하기를 시작하지 못했습니다. 노란 버튼을 다시 누르고 바로 말하세요.");
+      else { setSttStatus("음성인식을 시작하지 못했습니다."); showResume(); }
       return false;
     }
   }
@@ -607,47 +593,83 @@ document.addEventListener("DOMContentLoaded", function () {
     hideResume();
   }
   function showKakaoGate() {
-    var old = $("kakaoGate");
-    if (old) { old.hidden = false; old.style.display = "flex"; return; }
+    if ($("kakaoGate")) return;
     var d = document.createElement("div");
     d.id = "kakaoGate";
     d.style.cssText = "position:fixed;inset:0;z-index:80;background:#0c1016;display:flex;align-items:center;justify-content:center;padding:20px";
-    d.innerHTML = "<div class='card' style='max-width:520px'><h2>Safari로 열어 주세요</h2><p>카카오톡 안에서는 마이크와 음성인식이 동작하지 않습니다.</p><ol><li>오른쪽 위 또는 아래 ⋯ 를 누릅니다.</li><li>Safari로 열기를 누릅니다.</li><li>사파리에서 마이크 허용을 누릅니다.</li></ol><button type='button' class='btn gold' id='copyLink'>주소 복사</button><p id='copyMsg' class='tiny'></p></div>";
+    d.innerHTML = "<div class='card' style='max-width:520px'><h2>Safari로 열어 주세요</h2><p>카카오톡 안에서는 마이크와 음성인식이 동작하지 않습니다. 오른쪽 ⋯ 에서 Safari로 열기를 누르세요.</p></div>";
     document.body.appendChild(d);
-    var btn = $("copyLink");
-    if (btn) btn.addEventListener("click", function (ev) {
-      if (ev.stopPropagation) ev.stopPropagation();
-      var url = location.href;
-      var done = function () { $("copyMsg").textContent = "주소를 복사했습니다. Safari 주소창에 붙여 넣으세요."; };
-      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(done).catch(function () { $("copyMsg").textContent = url; });
-      else $("copyMsg").textContent = url;
-    });
   }
   function prepareIOSEquip() {
     S.sttPassed = false;
     var box = $("iosEquipBox");
     if (box) box.classList.remove("hide");
-    if ($("equipLead")) $("equipLead").textContent = "아이폰·아이패드는 한 문장 테스트를 통과해야 입장합니다. 카메라는 선택입니다.";
-    if ($("readyBtn")) { $("readyBtn").disabled = true; $("readyBtn").textContent = "테스트 통과 후 입장"; }
-    if ($("sttTestOut")) $("sttTestOut").textContent = "아직 테스트 전입니다.";
-    if ($("camMsg")) $("camMsg").textContent = "카메라는 선택입니다. 채점은 받아쓴 문장으로 합니다.";
-    if ($("micMsg")) $("micMsg").textContent = "한 문장 테스트를 누르면 마이크 허용이 뜹니다.";
-    if ($("spkMsg")) $("spkMsg").textContent = ("speechSynthesis" in window) ? "질문 읽어주기 사용 가능" : "질문 읽어주기를 확인할 수 없습니다.";
+    if ($("equipLead")) $("equipLead").textContent = "아이폰은 허용과 말하기가 따로입니다. 허용 창은 한 번만 뜹니다.";
+    if ($("readyBtn")) { $("readyBtn").disabled = true; $("readyBtn").textContent = "말하기 성공 후 입장"; }
+    if ($("sttTestOut")) $("sttTestOut").textContent = "1번으로 허용한 뒤, 노란 2번을 누르고 말하세요.";
+    if ($("camMsg")) $("camMsg").textContent = "카메라는 선택입니다.";
+    if ($("micMsg")) $("micMsg").textContent = "마이크 레벨은 생략해도 됩니다.";
+  }
+  function markGranted(msg) {
+    S.micGranted = true;
+    S.hasMic = true;
+    var b = $("sttSpeakBtn");
+    if (b) { b.disabled = false; b.classList.add("gold"); b.textContent = "2. 누르고 말하기"; }
+    if ($("sttTestOut")) $("sttTestOut").textContent = msg;
+    if ($("micMsg")) $("micMsg").textContent = "마이크 허용됨";
+  }
+  function grantMicIOS() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      if ($("sttTestOut")) $("sttTestOut").textContent = "이 브라우저는 마이크를 열 수 없습니다. Safari로 열어 주세요.";
+      return;
+    }
+    if ($("sttTestOut")) $("sttTestOut").textContent = "허용 창이 뜨면 허용을 누르세요. 이미 허용했다면 창은 뜨지 않습니다.";
+    navigator.mediaDevices.getUserMedia({audio:true, video:false}).then(function (stream) {
+      stream.getTracks().forEach(function (t) { try { t.stop(); } catch (e) {} });
+      releaseAudioTracks();
+      markGranted("허용되었습니다. 허용 버튼은 다시 뜨지 않습니다. 지금 노란 2번을 누르고 바로 말하세요.");
+    }).catch(function (e) {
+      var name = (e && e.name) || "";
+      if ($("sttTestOut")) {
+        $("sttTestOut").textContent = (name === "NotAllowedError" || name === "PermissionDeniedError")
+          ? "마이크가 거절되었습니다. 아이폰 설정 > Safari > 마이크 > 허용으로 바꾼 뒤 새로고침하세요."
+          : "허용 창을 마치지 못했습니다. 노란 2번을 눌러 보세요.";
+      }
+    });
   }
   function connectMicIOS() {
-    unlockSpeech();
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
     var AC = window.AudioContext || window.webkitAudioContext;
     try { if (!S.audio && AC) { S.audio = new AC(); S.audio.resume(); } } catch (e) {}
-    startMedia();
+    if ($("micMsg")) $("micMsg").textContent = "허용 창이 뜨면 허용을 누르세요. 레벨은 생략해도 됩니다.";
+    navigator.mediaDevices.getUserMedia({audio:true, video:false}).then(function (stream) {
+      S.stream = stream;
+      S.hasMic = true;
+      if (S.audio && S.audio.state === "suspended") S.audio.resume();
+      setupMeter();
+      if ($("micMsg")) $("micMsg").textContent = "연결됨. 막대가 움직이면 정상입니다. 곧 레벨을 끄고 말하기 단계로 넘깁니다.";
+      markGranted("레벨 확인용 허용이 끝났습니다. 허용 창은 다시 뜨지 않습니다. 노란 2번을 누르고 말하세요.");
+      clearTimeout(S.meterOff);
+      S.meterOff = setTimeout(function () {
+        releaseAudioTracks();
+        if ($("micMsg")) $("micMsg").textContent = "레벨 확인 끝. 2번을 누르고 말하세요.";
+      }, 2500);
+    }).catch(function () {
+      if ($("micMsg")) $("micMsg").textContent = "레벨 확인은 실패해도 됩니다. 1번 또는 2번으로 진행하세요.";
+      if ($("devNote")) {
+        $("devNote").style.display = "block";
+        $("devNote").textContent = "마이크 레벨 허용이 안 되면 설정 > Safari > 마이크를 확인하세요. 말하기 테스트는 따로 누를 수 있습니다.";
+      }
+    });
   }
   function connectCamIOS() {
     if (!navigator.mediaDevices) return;
     navigator.mediaDevices.getUserMedia({video:{facingMode:"user"}, audio:false}).then(function (cam) {
       var v = cam.getVideoTracks()[0];
-      if (S.stream && v) { try { S.stream.addTrack(v); } catch (e) { S.stream = cam; } }
-      else S.stream = cam;
+      if (!S.stream) S.stream = cam;
+      else if (v) { try { S.stream.addTrack(v); } catch (e) {} }
       S.hasCam = true;
-      attachPreview(S.stream);
+      attachPreview(S.stream || cam);
       $("camMsg").textContent = "카메라 연결 완료 (선택)";
     }).catch(function () {
       $("camMsg").textContent = "카메라 없음 — 면접은 진행할 수 있습니다.";
@@ -658,8 +680,9 @@ document.addEventListener("DOMContentLoaded", function () {
     try { if (window.speechSynthesis) speechSynthesis.cancel(); } catch (e) {}
     releaseAudioTracks();
     S.sttPassed = false;
-    if ($("readyBtn")) { $("readyBtn").disabled = true; $("readyBtn").textContent = "테스트 통과 후 입장"; }
-    if ($("sttTestOut")) $("sttTestOut").textContent = "듣는 중 — 허용을 누른 뒤 바로 말하세요.";
+    if ($("readyBtn")) { $("readyBtn").disabled = true; $("readyBtn").textContent = "말하기 성공 후 입장"; }
+    var b = $("sttSpeakBtn");
+    if (b) b.textContent = "듣는 중";
     launchRec("test");
   }
   function resumeSTT() {
@@ -682,7 +705,7 @@ document.addEventListener("DOMContentLoaded", function () {
   });
   $("readyBtn").addEventListener("click", function () {
     if (isKakaoInApp()) { showKakaoGate(); return; }
-    if (isIOS() && !S.sttPassed) { alert("한 문장 테스트를 통과해야 입장할 수 있습니다. 테스트 버튼을 누르고 바로 말해 주세요."); return; }
+    if (isIOS() && !S.sttPassed) { alert("노란 2번을 누르고 말한 뒤, 글자가 보이면 입장할 수 있습니다."); return; }
     stopSTT();
     go("waiting"); var n = 5; $("waitTime").textContent = "00:05";
     S.wait = setInterval(function () { n -= 1; $("waitTime").textContent = "00:0" + Math.max(0, n); if (n <= 0) { clearInterval(S.wait); go("door"); } }, 1000);
@@ -700,7 +723,7 @@ document.addEventListener("DOMContentLoaded", function () {
     return out;
   }
   $("startIv").addEventListener("click", async function () {
-    if (isIOS() && !S.sttPassed) { alert("장비 점검에서 한 문장 테스트를 먼저 통과해 주세요."); go("equipment"); return; }
+    if (isIOS() && !S.sttPassed) { alert("장비 점검에서 말하기 테스트를 먼저 통과해 주세요."); go("equipment"); return; }
     unlockSpeech();
     S.session = { student:{name:S.settings.name, univ:S.settings.univ, dept:S.settings.dept}, startedAt:new Date().toISOString(), hasMic:S.hasMic || isIOS(), questions:pick(S.settings.count), settings:copy(S.settings) };
     S.index = 0; $("startIv").classList.add("hide"); $("qText").textContent = "지금부터 면접을 시작하겠습니다."; await speak("지금부터 면접을 시작하겠습니다."); ask();
@@ -715,7 +738,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!isIOS() && S.settings.start === "auto") {
       var n = 5; $("hint").textContent = n + "초 후 답변이 시작됩니다.";
       S.auto = setInterval(function () { n -= 1; if (n <= 0) { clearInterval(S.auto); beginAns(); } else $("hint").textContent = n + "초 후 답변이 시작됩니다."; }, 1000);
-    } else $("hint").textContent = isIOS() ? "답변 시작을 누른 뒤 바로 말하세요. 키보드를 열면 받아쓰기가 끊길 수 있습니다." : "답변을 시작해 주세요.";
+    } else $("hint").textContent = isIOS() ? "답변 시작을 누른 뒤 바로 말하세요." : "답변을 시작해 주세요.";
   }
   function beginAns() {
     if (S.speaking) return;
@@ -862,9 +885,10 @@ document.addEventListener("DOMContentLoaded", function () {
       if (auto) { auto.checked = false; auto.disabled = true; }
       if (button) button.checked = true;
       var box = $("iosEquipBox"); if (box) box.classList.remove("hide");
-      if ($("readyBtn")) $("readyBtn").disabled = true;
+      if ($("readyBtn")) { $("readyBtn").disabled = true; $("readyBtn").textContent = "말하기 성공 후 입장"; }
     }
-    var testBtn = $("sttTestBtn"); if (testBtn) testBtn.addEventListener("click", startSttTest);
+    var grant = $("micGrantBtn"); if (grant) grant.addEventListener("click", grantMicIOS);
+    var speakBtn = $("sttSpeakBtn"); if (speakBtn) speakBtn.addEventListener("click", startSttTest);
     var micBtn = $("micConnectBtn"); if (micBtn) micBtn.addEventListener("click", connectMicIOS);
     var camBtn = $("camConnectBtn"); if (camBtn) camBtn.addEventListener("click", connectCamIOS);
     var resume = $("sttResume"); if (resume) resume.addEventListener("click", resumeSTT);
@@ -873,9 +897,6 @@ document.addEventListener("DOMContentLoaded", function () {
     document.addEventListener("visibilitychange", function () {
       if (document.visibilityState === "visible" && S.wantStt && S.speaking && !S.stt) showResume();
     });
-    if (window.speechSynthesis) {
-      try { speechSynthesis.onvoiceschanged = function () { koVoice(); }; speechSynthesis.getVoices(); } catch (e) {}
-    }
   }
   try { initPlatform(); } catch (err) {}
   S.bank = loadBank();
